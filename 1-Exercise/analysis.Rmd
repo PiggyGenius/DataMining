@@ -474,3 +474,9 @@ In order to choose the best model, we have to define a way to quantify their abi
 Cross-validation solves the problem of this bias but is more expensive in terms of computational power making it difficult to be used on very complex models with a lot of samples (we can use leave-one-out on very small datasets).
 
 The computation of the average prediction error shows us that it's not always a good idea to use all the variables to predict something. Indeed, as explained in the previous question, there is some overfitting which wasn't seen in the question 2A. So we can conclude that the model with 2 variables is a bit better than the model with all variables in terms of prediction accuracy, and a lot better in terms of computation power.
+
+*Model trained on the whole dataset :*
+```{r}
+final_prolm = lm(formula = lcavol ~ lpsa + lcp, data = pro)
+summary(final_prolm)
+```
