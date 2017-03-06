@@ -465,8 +465,10 @@ It seems that when we use a lot of variables, there is some overfitting of the t
 
 **What is your general conclusion about the choice of the best model to predict lcavol ? Estimate the best model on the whole dataset and comment the predictors and parameters. Compare the optimal prediction model to the model in question 2.A.**
 
+
 The best model to predict *lcavol* in the sense of cross-validation is the one with two explanatory variables *lcp* and *lpsa* since it is the least complex modem with the best cross-validation score. 
-Our model will be off by the plotted prediction error in average, thus if *lcavol* is a value that can be interpreted inside an interval that has a size close to the predicton average, for example if *lcavol* $ = x \pm 0.5 $ means one thing and *lcavol* $ = y \pm 0.5$ another, we can say that our model is very good.  
-On the other hand, if *lcavol* is interpreted with a lower gap, for example if *lcavol* $ = x \pm 0.05$ means one thing and *lcavol* $ = y \pm 0.05$ another, our model can't be used.  
+Our model will be off by the plotted prediction error in average, thus if *lcavol* is a value that can be interpreted inside an interval that has a size close to the predicton average, for example if *lcavol* $= x \pm 0.5$ means one thing and *lcavol* $= y \pm 0.5$ another, we can say that our model is very good.  
+On the other hand, if *lcavol* is interpreted with a lower gap, for example if *lcavol* $= x \pm 0.05$ means one thing and *lcavol* $= y \pm 0.05$ another, our model can't be used.  
 
-
+In order to choose the best model, we have to define a way to quantify their ability to predict, the answers above demonstrate that RSS is not a very good indicator of model performance, split-validation is better but still suffers from the bias of the seperation of our dataset (and can be a problem on very small datasets).
+Cross-validation solves the problem of this bias but is more expensive in terms of computational power making it difficult to be used on very complex models with a lot of samples (we can use leave-one-out on very small datasets).
