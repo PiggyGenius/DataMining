@@ -444,12 +444,15 @@ pro = pro[-37, ]
 pro[, "gleason"]<- factor(pro$gleason)
 best_models = cross_regression()
 average_prediction_error = as.numeric(unique(rapply(best_models, function(x) head(x, 1))))
-regression_size = c(0:7)
-#plot(regression_size, average_prediction_error, main = "Best average prediction error with respect to the regression size")
-#print(regression_size)
-#text(regression_size, average_prediction_error, round(average_prediction_error, 2), pos = 3)
+regression_size = c(0:(ncol(pro) - 1))
+#xlim = c(-0.2, 8.5), ylim = c(40, 330),
+plot(regression_size, average_prediction_error, main = "Best average prediction error with respect to the regression size", ylim = c(0, 3.5))
+text(regression_size, average_prediction_error, round(average_prediction_error, 2), pos = 3)
+```
+
+```{r, echo = FALSE}
 cat("Best average prediction error (5-fold) with respect to regression size along its explanatory set:\n")
-for(i in 1:(ncol(pro)-1)){
+for(i in 1:(ncol(pro))){
 	cat("Average prediction error = ", round(average_prediction_error[i], 2), "; variables:", best_models[[i]][2:i], "\n")
 }
 ```
