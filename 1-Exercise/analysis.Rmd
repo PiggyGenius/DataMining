@@ -1,0 +1,459 @@
+$\newcommand{\overbar}[1]{\mkern 1.5mu\overline{\mkern-1.5mu#1\mkern-1.5mu}\mkern 1.5mu}$
+
+
+# Data mining: $1^{st}$ practical
+
+### Preliminary analysis of the data
+
+</br>
+**A) Visualize the data using scatter plots between all pairs of variables.**
+
+List of variables that seem correlated to lcavol:
+
+* svi
+* lcp
+* lpsa
+
+```{r, fig.height=6.7, fig.width=11, echo = FALSE}
+panel.cor <- function(x, y, digits = 2, cex.cor, ...){
+	usr <- par("usr"); on.exit(par(usr))
+	par(usr = c(0, 1, 0, 1))
+	# correlation coefficient
+	r <- cor(x, y)
+	txt <- format(c(r, 0.123456789), digits = digits)[1]
+	txt <- paste("r= ", txt, sep = "")
+	text(0.5, 0.7, txt)
+
+	# p-value calculation
+	p <- cor.test(x, y)$p.value
+	txt2 <- format(c(p, 0.123456789), digits = digits)[1]
+	txt2 <- paste("p= ", txt2, sep = "")
+	if(p<0.01) txt2 <- paste("p= ", "<0.01", sep = "")
+	text(0.5, 0.2, txt2)
+}
+prostateCancer = read.table("prostate.data",header=T)
+pro1 = prostateCancer[,-ncol(prostateCancer)]
+pro = as.data.frame(cbind(scale(pro1[,2:9]),pro1[,1])) 
+names(pro) = c(names(pro1)[2:9],names(pro1)[1])
+pairs(pro, lower.panel = panel.cor) # The ijth scatterplot contains pro[i] plotted against pro[j]
+```
+
+</br>
+**B) Using scatterplots, summarize the main correlations between the 8 different predictors.**
+
+List of significant correlations:
+
+* lweight:
+	+ lbph
+	+ lpsa
+* svi:
+	+ lpsa
+* lcp:
+	+ lpsa
+
+```{r, fig.height=6.7, fig.width=11, echo = FALSE}
+pairs(pro[1:8], lower.panel = panel.cor)
+```
+
+### Linear regression
+
+</br>
+**A) Provide the mathematical equation of the regression model and define the different parameters. Display the regression table and explain what are the regression coefficients of the lines that start by gleason.**
+
+The goal of linear regression is to predict $Y_i$ as a linear combination of its features: $Y_i = \beta_0 + \sum\limits_{j=1}^{p} x_{i,j}\beta_j + \epsilon_i$.  
+The regression coefficients of *gleason* are the $\beta_j$ found by the model, *gleason* and *svi* are considered as qualitative variables, which means that their $n$ values are separated into $n-1$ variables and the estimated coefficients are based on the distance of each variable from the chosen floor variable.  
+In our case, we have two factor variables, SVI and gleason, to predict lcavol for a set of values that belongs to class k and l, which means that gleason is the $k^{th}$ variable and SVI is the $l^{th}$ variable, we consider p to be the amount of continuous variables and use the following equation: $\Large Y_{k,l}^i = \Bigg( \beta_0 + \sum\limits_{j=1}^{p-a} x_{i,j}\beta_j + \epsilon_i\Bigg) + \Bigg(\frac{\sum\limits_{j=1}^m x_{lcavol, j}\mathbb{1}(x_{gleason, j} = k)}{\sum\limits_{j=1}^m \mathbb{1}(x_{gleason, j} = k)} - \beta_0 + \epsilon_k^i) \Bigg) + \Bigg(\frac{\sum\limits_{j=1}^m x_{lcavol, j}\mathbb{1}(x_{svi, j} = l)}{\sum\limits_{j=1}^m \mathbb{1}(x_{svi, j} = l)} - \beta_0 + \epsilon_l^i) \Bigg)$.  
+Here $x_{i,j}$ is the value for the $j^{th}$ feature of sample $i$, $\beta_{j}$ is the weight of feature j (for the continuous variables), $\beta_0$ is the mean of the *lcavol* feature of our training samples, *the second parenthesis* (resp. *the third paranthesis*) is the difference between $\beta_0$ and the mean of *lcavol* when *gleason* = k (resp. *SVI* = l).
+
+```{r, echo = FALSE}
+pro[, "gleason"]<- factor(pro$gleason)
+pro[, "svi"]<- factor(pro$svi)
+prolm = lm(formula = lcavol ~ ., data = pro)
+summary(prolm)
+```
+
+</br>
+**B) Provide a summary of the main results of the regression.**
+
+Based on the p-values for the test, we can't throw the null hypothesis for *lcp*, *lpsa*, *age*, and *pgg45*. Thus we are fairly sure that those variables have an impact on the prediction of lcavol.
+We can't say that the other variables don't have an impact yet, because there may be a correlation with the previous variables.
+
+</br>
+**C) Explain the results of the linear regression without lpsa and lcp**
+
+The linear regression without *lcp* and *lpsa* yields different results. We now conclude that *lweight*, *svi1* and *gleason0* have an impact on the prediction of *lcavol*.  
+This is due to correlation between our explanatory variables. For example, *svi* is correlated to *lpsa* (r = 0.57), thus the linear regression without *lpsa* gives *svi* the power to impact the prediction since *lpsa* is not taken into account.
+
+```{r, echo = FALSE}
+prolm2 = lm(formula = lcavol ~ . - lpsa - lcp, data = pro)
+summary(prolm2)
+```
+
+</br>
+**D) Conclude about the effect of the lcp variable in the model of question A. Relate your conclusion to a 95% confidence interval you will provide for this regression coefficient.**
+
+The summary of the model of question A tells us that lcp is relevant for the prediction of lcavol relatively to the other variables included in the model. lcp might really be important or it could be correlated to an important variable.  
+<!-- We have $\hat{\beta} \sim \mathcal{N}(m, \sigma^2)$, by assumption that $\epsilon \sim \mathcal{N}(0, \sigma^2)$, we search a confidence interval for $m$. We know that the minimum variance unbiased estimator for $m$ is $\overbar{X}_n = \frac{1}{n}\sum\limits_{i=1}^{n}X_i$ and we are looking for a confidence interval such that: $m \in [\overbar{X}_n - \epsilon ; \overbar{X}_n + \epsilon]$.  
+For a given $\alpha$, we are looking for $\epsilon$ such that $P(|\overbar{X}_n - m| \leq \epsilon) = 1 - \alpha$.  
+$$\begin{equation}
+	\overbar{X}_n \sim \mathcal{N}(m, \frac{\sigma^2}{n}) \implies U = \sqrt{n} \frac{\overbar{X}_n - m}{\sigma} \sim \mathcal{N}(0, 1) \\ 
+P(|\overbar{X}_n - m| \leq \epsilon) = 1 - P(|U| > \frac{\sqrt{n}\epsilon}{\sigma} = 1 - \alpha.
+\end{equation}$$
+We have $u_{\alpha}$ such that $P(|U| > u_{\alpha}) = \alpha \implies \large{\frac{\sqrt{n}\epsilon}{\sigma}} = u_{\alpha} \implies \epsilon = \frac{\sigma}{\sqrt{n}}u_{\alpha}$.  
+Giving us the following confidence interval:  
+$$\begin{equation}
+\Bigg[\overbar{X}_n - \frac{\sigma}{\sqrt{n}}u_{\alpha} ; \overbar{X}_n + \frac{\sigma}{\sqrt{n}}u_{\alpha} \Bigg] 
+\end{equation}$$
+
+The problem here is that we don't know $\sigma$ which brings us to use $S_n' = \sqrt{\frac{1}{n-1}\sum\limits_{i=1}^n(X_i - \overbar{X}_n)^2}$ instead.  
+By Fisher's theorem, we know that $\sqrt{n} \frac{\overbar{X}_n - m}{S_n'} \sim \mathcal{St}(n-1)$. So if we consider $Y \sim \mathcal{St}(n-1)$:
+$$\begin{equation}
+P(|\overbar{X}_n - m| \leq \epsilon) = P(|Y| > \sqrt{n} \frac{\epsilon}{S_n'}) \\
+P(|Y| > t_{n-1,\alpha} = \alpha \implies \sqrt{n} \frac{\epsilon}{S_n'} = t_{n-1,\alpha} \implies \epsilon = \frac{S_n'}{\sqrt{n-1}}t_{n-1,\alpha}
+\end{equation}$$  
+
+Thus our final confidence interval is:
+$$\begin{equation}
+\Bigg[\overbar{X}_n - \frac{S_n'}{\sqrt{n-1}}t_{n-1,\alpha} ; \overbar{X}_n + \frac{S_n'}{\sqrt{n-1}}t_{n-1,\alpha} \Bigg]
+\end{equation}$$ -->
+
+```{r, echo = FALSE}
+interval = confint(prolm, level = 0.90)
+cat("Confidence interval for the regression coefficient of lcp: [", interval[6, 1], ";", interval[6, 2],"]", "\n")
+```
+
+</br>
+**E) What is probability distribution of the T statistic under the null hypothesis ? Provide the parameters of this probability density function. For which values of T a variable goes from 0.05 < P < 0.1 to P < 0.05. Check that this threshold is compatible with the t-values found for the variables tagged with . and with * .**
+
+The T statistic follows Student's t-distribution under the null hypothesis with $n - p -1$ degrees of freedom, $n$ is the number of samples and $p$ is the number of features. In our case, we have $p = 10$ (since we consider *svi* and *gleason* as qualitative values) and $n = 97$ samples.
+Thus, our parameter is $97 - 10 - 1 = 86$ and we can confirm that by looking at the third line from the bottom of the summary of our model.  
+```{r, echo = FALSE}
+cat("t-score with alpha = 0.1:", qt(1 - 0.1 / 2, 86), "\n")
+cat("t-score with alpha = 0.05:", qt(1 - 0.05 / 2, 86), "\n")
+```
+If our variable follows a Student law with 86 degrees of liberty, $|t| \in [1.66; 1.99] \Rightarrow p \in [0.05; 0.1]$.  
+$|t| > 1.99 \Rightarrow p < 0.05$.  
+As we can see in the summary of our linear model, we have:
+
+* age, t-value = 2.205 and p-value = 0.0301 tagged with *
+* pgg45, t-value = -2.080 and p-value = 0.0405 tagged with *
+* lbph, t-value = -1.790 and p-value = 0.0770 tagged with .
+
+```{r, echo = FALSE}
+cat("Number of columns: ", ncol(pro), "\n")
+cat("Number of rows: ", nrow(pro), "\n")
+summary(prolm)
+```
+
+</br>
+**F) Plot the predicted values of lcavol as a function of the actual values. Plot both actual values and predicted values as a function of index after sorting the actual values and applying the same permutation to the predicted values. Provide the value of residual sum of squares.**
+
+```{r, echo = FALSE}
+plot(t(pro['lcavol']), prolm$fitted.values)
+sorted_values = sort.int(t(pro['lcavol'][[1]]), index.return = TRUE)
+predicted_values = prolm$fitted.values[sorted_values$ix] 
+plot(sorted_values$x)
+plot(predicted_values)
+cat('The residual sum of squares is:',sum(residuals(prolm)^2),'\n')
+```
+</br>
+
+### Effect of the qualitative variables
+
+</br>
+**By performing a one-way ANOVA, decide if the predictors svi and gleason affects lcavol.**
+
+We see that there is a significant effect of *svi* and *gleason* on *lcavol*. This analysis is reinforced by the difference between the empirical means of *lcavol* based on the different values of *svi* and *gleason*.
+
+```{r, echo = FALSE}
+prolm2 = lm(formula = lcavol ~ . - lpsa - lcp, data = pro)
+anova(lm(formula = lcavol ~ svi, data = pro))
+model.tables(aov(lcavol ~ svi, data = pro), type = "means")
+anova(lm(formula = lcavol ~ gleason, data = pro))
+model.tables(aov(lcavol ~ gleason, data = pro), type = "means")
+```
+</br>
+
+### Best subset selection
+
+</br>
+
+**A) Why may the model studied in part two not be optimal ? Describe the model implemented in lm(lcavol ~ 1, data = pro), lm(lcavol ~ ., data = pro[, c(1, 4, 9)]) and lm(lcavol ~ ., data = pro[, c(1, 2, 7)]). How can you automatically obtain the residual sum of squares of a regression model ? How can you automatically perform all the regressions of size k = 2 ?**
+
+Our model might not be optimal because some of the variables used for the prediction may have no or almost no predicting power on *lcavol* which means that our model is more complex, both computationnaly and in terms of comprehension for no good reason.  
+
+* The first model doesn't use any explanatory variables thus only consists of an intercept : the regression is a constant, chosen as the mean of the *lcavol* values (to minimize the RSS). It makes a very weak predictive model as the residual sum of squares shows: 133.159. 
+* The second model only uses *lweight* and *svi* to predict *lcavol* providing a better predictive performance than the first model with a RSS of 89.34527 that is still twice the score of the linear regression that uses all the variables for its predictions.  
+* The last model, changed to include *lcavol* otherwise we can't use the model, is a bit worst than the second one despite using one more variable proving that quantity is not quality.
+
+We can automatically obtain the residual sum of a regression model by using the following code:
+
+> sum(residuals(model)^2)
+
+We can automatically perform all the regressions of size k = 2 by using the following code:
+
+> combinations = combn(names(pro[1:8], 2)  
+> x = combinations[1,]  
+> y = combinations[2,]  
+> mapply(function(x, y) lm(paste("lcavol","~",x,"+",y,collapse=""), data = pro), x, y)
+
+The preceding code, modified a bit, allows us to know which regression of size 2 has the best residual sum of squares, it is the model that consists of *lcp* and *lpsa* with a score of 47.278 fairly close to the one with all the variables of 41.814. 
+
+```{r}
+first_model = lm(lcavol ~ 1, data = pro)
+second_model = lm(lcavol ~ ., data = pro[, c(1, 4, 9)])
+third_model = lm(lcavol ~ ., data = pro[, c(1, 2, 7, 9)])
+cat('Residual sum of squares of model 1: ', sum(residuals(first_model)^2), '\n')
+cat('Residual sum of squares of model 2: ', sum(residuals(second_model)^2), '\n')
+cat('Residual sum of squares of model 3: ', sum(residuals(third_model)^2), '\n')
+cat('Residual sum of squares of a linear regression model with all the variables: ', sum(residuals(prolm)^2), '\n')
+combinations = combn(names(pro[1:8]), 2)
+x = combinations[1,]
+y = combinations[2,]
+rss = mapply(function(x, y) return(c(sum(residuals(lm(paste("lcavol","~",x,"+",y,collapse=""), data = pro))^2),x,y)),x,y,SIMPLIFY = FALSE)
+minimal_rss = which.min(unique(rapply(rss, function(x) head(x, 1))))
+cat('The best regression model of size 2 is: ',rss[[minimal_rss]][2],"+",rss[[minimal_rss]][3],'.\n Residual sum of squares: ',rss[[minimal_rss]][1],'.\n')
+```
+
+</br>
+**B) For each value of k in {0,...,8}, write R code to select the set of predictors that minimizes the residual sum of squares. Plot the residual sum of squares as a function of k. Provide the name of the predictors for each value of k.**
+
+```{r}
+best_regression <- function(){
+	best_models = list()
+	best_models[[1]] = sum(residuals(lm(lcavol ~ 0, data = pro))^2)
+	for(k in 1:8){
+		values = combn(names(pro[1:8]), k)
+		minimal_residual = .Machine$integer.max
+		for(i in 1:choose(8, k)){
+			model = "lcavol ~ "
+			for(j in 1:k-1){
+				model = paste(model, values[, i][j], "+", collapse = NULL)
+			}
+			model = paste(model, values[, i][k], collapse = NULL)
+			rss = sum(residuals(lm(model, data = pro))^2)
+			if(rss < minimal_residual){
+				minimal_residual = rss
+				optimal = values[, i]
+			}
+		}
+		best_models[[k+1]] = c(minimal_residual, optimal)
+	}
+	return(best_models)
+}
+best_models = best_regression()
+residual_sums_of_squares = as.numeric(unique(rapply(best_models, function(x) head(x, 1))))
+regression_size = c(0:8)
+plot(regression_size, residual_sums_of_squares, xlim = c(-0.2, 8.5), ylim = c(40, 330), main = "Best RSS with respect to the regression size")
+text(regression_size, residual_sums_of_squares, round(residual_sums_of_squares, 2), pos = 3)
+cat("Best RSS with respect to regression size along its explanatory set:\n")
+for(i in 2:8){
+	cat("RSS = ", round(residual_sums_of_squares[i], 2), "; variables:", best_models[[i]][2:i], "\n")
+}
+```
+
+</br>
+**C) Do you think that minimizing the residual sum of squares is well suited to select the optimal size for the regression models ?**
+
+The RSS is overall a good metric for prediction performance despite having two main issues. The first one is due to polynomials of high degrees in the case of polynomial regression, large errors will be compensated by small which hides some of the weaknesses of the model.
+This problem can be minimized with Ridge regression, that creates the other problem of choosing a good hyperparameter lambda: $\hat{\beta} = \underset{\beta}{\arg\min}\bigg[\sum\limits_{i=1}^n(y_i-\beta_0-\sum\limits_{j=1}^p\beta_{j}x_{i,j})^{2}+\lambda\sum\limits_{i=1}^{p}\beta_{i}^{2}\bigg]$
+
+The second problem is that since the residuals are squared, the RSS gives a lot of importance to the errors due to outliers, this can be a problem because a good model with a high RSS might be rejected in favor of a worst model that wouldn't be affected as much by outliers.
+Thankfully, this problem can be dealt with by prior data preprocessing that will shrink outliers, with L2-regularization for example, or by completely removing them.
+
+We can also notice that the RSS will never be worse for a model containing all the variables of another model plus other variables, even if those variables are completely usless (since the $\beta$ can be set to 0). Thus, it is impossible to use RSS to choose between two models where one of the model contains the variables of the other and others if they have similar scores, it can't be a way to choose the model that maximizes the RSS and minimizes the number of variables unless we are willing to set an accepted tradeoff on complexity and RSS performance.
+
+Furthermore, the performance of a model based on the training set with RSS is not a sufficient indicator of the quality of a model. If we choose a model with a polynomial of a very high degree, the RSS will be minimal but our model will overfit the training data and will be incapable of accurately prediciting new values.  
+We need an additional indicator that will take in account the power of prediction of the model on new data.
+</br>
+</br>
+
+### Split-validation
+
+</br>
+**A) Give a brief overview of split-validation: how it works, why it is not subject to the issues raised in the preceding question on residual sum of squares ? The validation set will be composed of all individuals whose indices will be a multiple of 3, store these indices in a vector called valid.**
+
+Split-validation is a way to evaluate the performance of the model by spliting the original dataset into a train set and a test set. The train set will be used to train the model, once the training is done, we use the test set to evaluate the prediction performance of the model.  
+For example, we can compute the average of correct predictions on the test set which can be a good indicator of overfitting (if the performance on the train set is very good and the one on the test set is much worse, it is a tell that our model doesn't generalize well to new data).
+
+If we select the model based on its performance on the test set, we ensure that we will not select the model with the worst overfit of the data, unlike what we did by selecting the model based on its RSS score.
+
+```{r}
+valid = (1:97) %% 3 == 0
+```
+
+**B) We assume that the best model is of size 2. Describe what is performed when running the function lm(lcavol ~ ., data = pro[!valid, c(i, j, 9)]). What is the mean training error of the model ?**
+
+We established earlier that the best model of size 2, based on the RSS, is the one containing *lcp* and *lpsa*, giving us $i = 5$ and $j = 8$.
+
+```{r, echo = FALSE}
+test = pro[valid, ]
+train = pro[!valid, ]
+prolm5 = lm(lcavol ~ ., data = as.data.frame(pro[1:97 %% 3 != 0, c(5, 8, 9)]))
+summary(prolm5)
+```
+This function performs a linear regression on the training set only (it excludes the rows that are in the validation set).
+
+**C) With the regression model of size 2, predict values of lcavol for the validation set.Compute the mean prediction error and compare this error to the training error.**
+
+```{r, echo = FALSE}
+best_2 = lm(lcavol ~ lcp + lpsa, data = train)
+cat("Mean prediction error on the test dataset:", mean((predict.lm(best_2, newdata = test) - t(test[9]))^2), "\n")
+cat("Mean prediction error on the train dataset:", mean((residuals(best_2))^2), "\n")
+```
+
+**D) Reusing part of the code implemented above, perform split-validation to compare the 9 different models. Plot the training and prediction errors as a function of the size of the regression models. Choose one model, giving the parameter estimates for the model trained on the whole dataset and explain your choice.**
+
+```{r, echo = FALSE}
+# perform linear regression on training set
+lm_sv = list()
+lm_sv[[1]] = lm(lcavol ~ 1, data = train)
+lm_sv[[2]] = lm(paste("lcavol ~", best_models[[2]][2]), data=pro)
+
+for (k in 3:9) {
+	l = length(best_models[[k]])
+	model = "lcavol ~ "
+	for (i in 2:(l - 1)) {
+		model = paste(model, best_models[[k]][i], "+", collapse = NULL)
+	}
+	model = paste(model, best_models[[k]][l], collapse = NULL)
+	lm_sv[[k]] = lm(model, data = train)
+}
+
+# compute the errors
+errors = matrix(, nrow=2, ncol=length(lm_sv))
+for (i in 1:length(lm_sv)) {
+	test_errors = mean(abs(predict.lm(lm_sv[[i]], newdata = test) - t(test['lcavol'])))
+	train_errors = mean(residuals(lm_sv[[i]])^2)
+	errors[,i] = c(test_errors, train_errors)
+}
+rownames(errors) = c("Mean prediction error on validation set",
+					 "Mean prediction error on training set")
+
+barplot(errors, col=c("green", "red"), xlab="Number of variables in the model", legend=rownames(errors), beside=TRUE)
+```
+
+
+
+**E) What is the main issue of split-validation ? Illustrate this issue on the cancer dataset.**
+
+The main issue of split-validation is that the prediction error depends on the choice of the training and validation set, the same model could show much better or worse predictions errors on other subsets of our initial dataset.  
+The main solution to this issue is to use cross-validation so that the prediction error is an average of the k possible subsets.
+Another issue with small datasets is that we don't leave a sufficient training set for our model to capture enough of the variance which will lead to poor prediction accuracy.  
+We can see an example below were the test data consists of the 32 first samples and the train data of the rest, giving us a bigger gap between our means than when we select one sample every three sample.
+
+```{r, echo = FALSE}
+test = pro[1:32, ]
+train = pro[33:97, ]
+best_2 = lm(lcavol ~ lcp + lpsa, data = train)
+cat("Mean prediction error on the test dataset:", mean((predict.lm(best_2, newdata = test) - t(test[9]))^2), "\n")
+cat("Mean prediction error on the train dataset:", mean((residuals((best_2)))^2), "\n")
+```
+
+**F) What method can address the problems of split-validation ? Code this alternative method and comment the result.**
+
+We can use cross-validation, our mean prediction error will a better indicator of the "real" prediction power of our model that way.
+
+```{r}
+stratified_k_fold <- function(df, k) {
+	# split the dataframe df into k dataframes for stratified cross-validation
+	# with respect of proportions of gleason and svi
+	# returns a list of theses dataframes
+
+	# we create k dataframes
+	groups <- list()
+	for (i in 1:k) {
+		groups[[i]] <- data.frame(matrix(ncol=length(colnames(df)), nrow=0))
+		colnames(groups[[i]]) <- colnames(df)
+	} 
+
+	# curr is the current dataframe in which we'll add an element
+	curr <- 1
+	# data is group by (gleason, svi)
+	# for each group, add one to each data partition until empty
+	for (ll in split(df, df$gleason)) {
+		for (l in split(ll, ll$svi)) {
+			# each element of the group is added to the current group
+			if (nrow(l) > 0) {
+				for (i in 1:nrow(l)) {
+					groups[[curr]] <- rbind(groups[[curr]], l[i,])
+					# and we go circulary to the next group
+					curr <- curr%%k + 1
+				}
+			}
+		}
+	}
+	return(groups)
+}
+```
+
+```{r, echo = FALSE}
+require(plyr)
+```
+
+```{r}
+cross_regression <- function(){
+	shuffled_pro = pro[sample(nrow(pro)), ]
+	column_count = ncol(shuffled_pro) - 1
+	best_models = list()
+	best_models[[1]] = 0
+	test = stratified_k_fold(pro, 5)
+	train = list()
+	# We create a list that contains 5 lists of the different compositions of the four training sets
+	for(u in 1:5){
+		train[[u]] = ldply(test[(1:5)[!(1:5 %in% u)]])
+	}
+	# We train the model on the five different training folds, here the model has no variables
+	for(u in 1:5){
+		best_models[[1]] = best_models[[1]] + mean((predict.lm(lm(lcavol ~ 0, data = train[[u]]), newdata = test[[u]]) - t(test[[u]][9]))^2)
+	}
+	# We compute the prediction average, giving us the score of the model
+	best_models[[1]] = best_models[[1]] / 5
+	# We compute every possible regression size
+	for(k in 1:column_count){
+		values = combn(names(shuffled_pro[1:column_count]), k)
+		minimal_error = .Machine$integer.max
+		# We compute every possible variable combination
+		for(i in 1:choose(column_count, k)){
+			# We need to write the model function using strings with paste
+			model = "lcavol ~ "
+			if(k > 1){
+				for(j in 1:k-1){
+					model = paste(model, values[, i][j], "+", collpase = NULL)
+				}
+			}
+			model = paste(model, values[, i][k], collapse = NULL)
+			# Now we compute the average prediction error on each test fold
+			prediction_error = 0
+			for(u in 1:5){
+				prediction_error = prediction_error + mean((predict.lm(lm(model, data = train[[u]]), newdata = test[[u]]) - t(test[[u]][9]))^2)
+			}
+			prediction_error = prediction_error / 5
+			# We save the model with the best prediction error
+			if(prediction_error < minimal_error){
+				minimal_error = prediction_error
+				optimal = values[, i]
+			}
+		}
+		best_models[[k+1]] = c(minimal_error, optimal)
+	}
+	return(best_models)
+}
+# We remove the abnormal value in gleason = 1.72
+pro = pro[-37, ]
+pro[, "gleason"]<- factor(pro$gleason)
+best_models = cross_regression()
+average_prediction_error = as.numeric(unique(rapply(best_models, function(x) head(x, 1))))
+regression_size = c(0:7)
+#plot(regression_size, average_prediction_error, main = "Best average prediction error with respect to the regression size")
+#print(regression_size)
+#text(regression_size, average_prediction_error, round(average_prediction_error, 2), pos = 3)
+cat("Best average prediction error (5-fold) with respect to regression size along its explanatory set:\n")
+for(i in 1:(ncol(pro)-1)){
+	cat("Average prediction error = ", round(average_prediction_error[i], 2), "; variables:", best_models[[i]][2:i], "\n")
+}
+```
+
+### Conclusion
+
+**What is your general conclusion about the choice of the best model to predict lcavol ? Estimate the best model on the whole dataset and comment the predictors and parameters. Compare the optimal prediction model to the model in question 2.A.**
