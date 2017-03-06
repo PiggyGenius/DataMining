@@ -93,29 +93,6 @@ summary(prolm2)
 **D) Conclude about the effect of the lcp variable in the model of question A. Relate your conclusion to a 95% confidence interval you will provide for this regression coefficient.**
 
 The summary of the model of question A tells us that lcp is relevant for the prediction of lcavol relatively to the other variables included in the model. lcp might really be important or it could be correlated to an important variable.  
-<!-- We have $\hat{\beta} \sim \mathcal{N}(m, \sigma^2)$, by assumption that $\epsilon \sim \mathcal{N}(0, \sigma^2)$, we search a confidence interval for $m$. We know that the minimum variance unbiased estimator for $m$ is $\overbar{X}_n = \frac{1}{n}\sum\limits_{i=1}^{n}X_i$ and we are looking for a confidence interval such that: $m \in [\overbar{X}_n - \epsilon ; \overbar{X}_n + \epsilon]$.  
-For a given $\alpha$, we are looking for $\epsilon$ such that $P(|\overbar{X}_n - m| \leq \epsilon) = 1 - \alpha$.  
-$$\begin{equation}
-	\overbar{X}_n \sim \mathcal{N}(m, \frac{\sigma^2}{n}) \implies U = \sqrt{n} \frac{\overbar{X}_n - m}{\sigma} \sim \mathcal{N}(0, 1) \\ 
-P(|\overbar{X}_n - m| \leq \epsilon) = 1 - P(|U| > \frac{\sqrt{n}\epsilon}{\sigma} = 1 - \alpha.
-\end{equation}$$
-We have $u_{\alpha}$ such that $P(|U| > u_{\alpha}) = \alpha \implies \large{\frac{\sqrt{n}\epsilon}{\sigma}} = u_{\alpha} \implies \epsilon = \frac{\sigma}{\sqrt{n}}u_{\alpha}$.  
-Giving us the following confidence interval:  
-$$\begin{equation}
-\Bigg[\overbar{X}_n - \frac{\sigma}{\sqrt{n}}u_{\alpha} ; \overbar{X}_n + \frac{\sigma}{\sqrt{n}}u_{\alpha} \Bigg] 
-\end{equation}$$
-
-The problem here is that we don't know $\sigma$ which brings us to use $S_n' = \sqrt{\frac{1}{n-1}\sum\limits_{i=1}^n(X_i - \overbar{X}_n)^2}$ instead.  
-By Fisher's theorem, we know that $\sqrt{n} \frac{\overbar{X}_n - m}{S_n'} \sim \mathcal{St}(n-1)$. So if we consider $Y \sim \mathcal{St}(n-1)$:
-$$\begin{equation}
-P(|\overbar{X}_n - m| \leq \epsilon) = P(|Y| > \sqrt{n} \frac{\epsilon}{S_n'}) \\
-P(|Y| > t_{n-1,\alpha} = \alpha \implies \sqrt{n} \frac{\epsilon}{S_n'} = t_{n-1,\alpha} \implies \epsilon = \frac{S_n'}{\sqrt{n-1}}t_{n-1,\alpha}
-\end{equation}$$  
-
-Thus our final confidence interval is:
-$$\begin{equation}
-\Bigg[\overbar{X}_n - \frac{S_n'}{\sqrt{n-1}}t_{n-1,\alpha} ; \overbar{X}_n + \frac{S_n'}{\sqrt{n-1}}t_{n-1,\alpha} \Bigg]
-\end{equation}$$ -->
 
 ```{r, echo = FALSE}
 interval = confint(prolm, level = 0.90)
@@ -445,7 +422,6 @@ pro[, "gleason"]<- factor(pro$gleason)
 best_models = cross_regression()
 average_prediction_error = as.numeric(unique(rapply(best_models, function(x) head(x, 1))))
 regression_size = c(0:(ncol(pro) - 1))
-#xlim = c(-0.2, 8.5), ylim = c(40, 330),
 plot(regression_size, average_prediction_error, main = "Best average prediction error with respect to the regression size", ylim = c(0, 3.5))
 text(regression_size, average_prediction_error, round(average_prediction_error, 2), pos = 3)
 ```
