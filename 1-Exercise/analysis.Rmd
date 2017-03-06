@@ -457,6 +457,10 @@ for(i in 1:(ncol(pro))){
 }
 ```
 
+We can see that the model with 2 variables (*lcp* and *lpsa*) is the optimal one because it has one of the lowest average prediction error, and for equivalent models, we choose the simplest one.
+
+It seems that when we use a lot of variables, there is some overfitting of the training data : indeed, the average prediction error is a bit higher. It also demonstrates that the lowest RSS is not necessarily the best one (since it is a decreasing function of the number of variables, it doesn't take in account the overfitting). The average prediction error is a better indicator for the choice of the model.
+
 ### Conclusion
 
 **What is your general conclusion about the choice of the best model to predict lcavol ? Estimate the best model on the whole dataset and comment the predictors and parameters. Compare the optimal prediction model to the model in question 2.A.**
