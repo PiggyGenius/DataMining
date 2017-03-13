@@ -1,0 +1,52 @@
+
+# Data mining: $2^{nd}$ practical
+
+### 1 : Data 
+
+Number of unnamed columns : 
+```{r, echo=FALSE}
+NAm2 = read.table("NAm2.txt", header=TRUE)
+print(sum(is.na(colnames(NAm2, do.NULL=TRUE))))
+```
+
+```{r}
+# get the list of the tribe names
+names=unique(NAm2$Pop)
+# get the differents couples (latitude, longitude) for each tribe
+# unique() keeps only one examplar for each
+coord=unique(NAm2[,c("Pop","long","lat")]) #coordinates for each pop
+# colors for the plot
+colPalette=rep(c("black","red","cyan","orange","brown","blue","pink","purple","darkgreen"),3)
+# set the icons for the plot
+pch=rep(c(16,15,25),each=9)
+plot(coord[,c("long","lat")],pch=pch,col=colPalette,asp=1)
+# asp allows to have the correct ratio between axis longitude and latitude
+# Then the map is not deformed
+legend("bottomleft",legend=names,col=colPalette,lty=-1,pch=pch,cex=.75,ncol=2,lwd=2)
+library(maps)
+# add the map of the world
+map("world",add=T)
+```
+
+### 2 : Regression
+```{r, echo=FALSE}
+NAaux = NAm2[,-c(1:7)]
+NAauxLM = lm(formula = long ~ ., data=NAaux)
+```
+
+There is more variables that data : we solve a linear system in which there is more unknown variables than equations. So there is a infinite number of solutions, that is why we have NA values.
+
+
+### 3 : PCA
+```{r, echo=FALSE}
+pcaNAm2 = prcomp(NAaux, center=TRUE, scale=TRUE)
+```
+
+#### a)
+Easy
+
+#### b)
+
+### 4 : PCR
+### 5 : PCR and Cross-Validation
+### 6 : Conclusion
