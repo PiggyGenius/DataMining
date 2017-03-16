@@ -12,6 +12,7 @@ print(sum(is.na(colnames(NAm2, do.NULL=TRUE))))
 ```{r}
 # get the list of the tribe names
 names=unique(NAm2$Pop)
+npop=length(names)
 # get the differents couples (latitude, longitude) for each tribe
 # unique() keeps only one examplar for each
 coord=unique(NAm2[,c("Pop","long","lat")]) #coordinates for each pop
@@ -34,7 +35,7 @@ NAaux = NAm2[,-c(1:7)]
 NAauxLM = lm(formula = long ~ ., data=NAaux)
 ```
 
-There is more variables that data : we solve a linear system in which there is more unknown variables than equations. So there is a infinite number of solutions, that is why we have NA values.
+There is more variables than data : we solve a linear system in which there is more unknown variables than equations. So there is a infinite number of solutions, that is why we have NA values.
 
 
 ### 3 : PCA
@@ -42,11 +43,28 @@ There is more variables that data : we solve a linear system in which there is m
 pcaNAm2 = prcomp(NAaux, center=TRUE, scale=TRUE)
 ```
 
-#### a)
-Easy
+### 4 : PCR
+#### a) Predict the latitude and longitude using the scores of the 250 PCA axes. Let denote the results of these regressions by *lmlat* and *lmlong*.
+
+```{r, echo=FALSE}
+pca250 = pcaNAm2$x[,1:250]
+
+lmlong = lm(formula = long ~ ., data = cbind(pca250, NAm2["long"]))
+lmlat = lm(formula = lat ~ ., data = cbind(pca250, NAm2["lat"]))
+
+plot(lmlong$fitted.values,lmlat$fitted.values, col="white", asp=1)
+for (i in 1:npop) {
+	# print(names[i])
+	lines(lmlong$fitted.values[which(NAm2[,3]==names[i])],
+		  lmlat$fitted.values[which(NAm2[,3]==names[i])],
+		  type="p",col=colPalette[i],pch=pch[i])
+}
+legend("topright",legend=names,col=colPalette,
+	   lty=-1,pch=pch,cex=.75,ncol=2,lwd=2)
+map("world",add=T)
+```
 
 #### b)
 
-### 4 : PCR
 ### 5 : PCR and Cross-Validation
 ### 6 : Conclusion
