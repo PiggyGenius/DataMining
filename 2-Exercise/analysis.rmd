@@ -11,41 +11,76 @@ print(sum(is.na(colnames(NAm2, do.NULL=TRUE))))
 
 ```{r}
 # get the list of the tribe names
-names=unique(NAm2$Pop)
+names = unique(NAm2$Pop)
 # get the differents couples (latitude, longitude) for each tribe
+npop = length(names)
 # unique() keeps only one examplar for each
-coord=unique(NAm2[,c("Pop","long","lat")]) #coordinates for each pop
+coord = unique(NAm2[,c("Pop","long","lat")]) #coordinates for each pop
 # colors for the plot
-colPalette=rep(c("black","red","cyan","orange","brown","blue","pink","purple","darkgreen"),3)
+colPalette = rep(c("black","red","cyan","orange","brown","blue","pink","purple","darkgreen"),3)
 # set the icons for the plot
-pch=rep(c(16,15,25),each=9)
-plot(coord[,c("long","lat")],pch=pch,col=colPalette,asp=1)
+pch = rep(c(16,15,25),each = 9)
+plot(coord[,c("long","lat")],pch = pch,col = colPalette,asp = 1)
 # asp allows to have the correct ratio between axis longitude and latitude
 # Then the map is not deformed
-legend("bottomleft",legend=names,col=colPalette,lty=-1,pch=pch,cex=.75,ncol=2,lwd=2)
+legend("bottomleft",legend = names,col = colPalette,lty = -1,pch = pch,cex = .75,ncol = 2,lwd = 2)
 library(maps)
 # add the map of the world
-map("world",add=T)
+map("world",add = T)
 ```
 
 ### 2 : Regression
 ```{r, echo=FALSE}
 NAaux = NAm2[,-c(1:7)]
-NAauxLM = lm(formula = long ~ ., data=NAaux)
+NAauxLM = lm(formula = long ~ ., data = NAaux)
 ```
+**Using all genetic markers as predictors, predict the longitude using a linear regression model. What happens ?**
 
-There is more variables that data : we solve a linear system in which there is more unknown variables than equations. So there is a infinite number of solutions, that is why we have NA values.
+There is more variables that data : we solve a linear system in which there is more unknown variables than equations. So there is an infinite number of solutions, that is why we have NA values.
 
 
 ### 3 : PCA
+
+**A) Explain quickly the principle of PCA.**
+
+PCA is an algorithm that projects a space into another space, that can be of a lesser dimension, while maximizing the explained variance, the algorithm considers that the data is linearly seperable and if it isn't it is possible to use kernel PCA.
+The algorithm can be used on the feature space and the data space and we can resume it algorithm as:
+
+* Standardize the D-dimensional dataset (PCA is highly sensible to scale differences).
+
+* Construct the covariance matrix.
+
+* Find the eigenpairs of the covariance matrix (eigenvectors and eigenvalues).
+
+* Select the K first eigenvectors that correspond to the K largest eigenvalues where K is the dimensionality of the new space (K <= D).
+
+* Construct a projection matrix from the top K eigenvectors.
+
+* Transform the D-Dimensional dataset using the projection matrix to obtain the new K-dimensional space.
+
+**B) Perform PCA on genetic data with all samples, do we need to use the argument scale of prcomp ?**
+
+We don't need to use the scale argument since our data is already on the same scale (binary values). Scaling the data would even deterior the prediction since we would loose information.
+TODO: Say more about why scaling woud be worst.
+
+**C) Describe and interpret the obtained graphs, what populations are easily identified using the first two axes. Answer to the same question using the 5th and 6th axes.**
+
+BON
+
 ```{r, echo=FALSE}
-pcaNAm2 = prcomp(NAaux, center=TRUE, scale=TRUE)
+pcaNAm2 = prcomp(NAaux, center = TRUE, scale = FALSE)
+pca_plot <- function(caxes){
+	plot(pcaNAm2$x[,caxes],col="white")
+	for (i in 1:npop) {
+		print(names[i])
+		lines(pcaNAm2$x[which(NAm2[,3]==names[i]),caxes],type="p",col=colPalette[i],pch=pch[i])
+	}
+	legend("top",legend = names,col = colPalette,lty = -1,pch = pch,cex = .75,ncol = 3,lwd = 2)
+}
+pca_plot(c(1,2))
+pca_plot(c(5,6))
 ```
 
-#### a)
-Easy
-
-#### b)
 
 ### 4 : PCR
 ### 5 : PCR and Cross-Validation
