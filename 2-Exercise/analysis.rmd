@@ -102,7 +102,7 @@ legend("topright",legend=names,col=colPalette,
 map("world",add=T)
 ```
 
-#### b)
+#### b) Calculate the mean error of the previous model built using 250 axes.
 ```{r, echo=FALSE, message=FALSE}
 library(fields)
 ```
@@ -115,6 +115,27 @@ print(mean(rdist.earth.vec(longlat_found, longlat_exp, miles=F)))
 ```
 This error is expressed in kilometers (to compare it, America is about 13 000 km long from north to south).
 
-
 ### 5 : PCR and Cross-Validation
+
+#### b)
+##### i. Create an empty matrix predictedCoord with 2 columns ("longitude", "latitude") and as many rows as there are individuals.
+```{r}
+predictedCoord = matrix(nrow=nrow(NAm2), ncol=2, dimnames=list(c(), c("long", "lat")))
+```
+
+##### ii. Using as predictors the scores of the first 4 PCA axes, explain latitude and longitude using the individuals who do not belong to validation set n. 1.
+```{r}
+naxes = 4
+
+pcalong = data.frame(cbind(long=NAm2[,c("long")],pcaNAm2$x))
+pcalat = data.frame(cbind(lat=NAm2[,c("lat")],pcaNAm2$x))
+
+# lmlong2 = lm(formula = long ~ ., data = pcalong, subset = )
+# lmlat2 = lm(formula = lat ~ ., data = pcalat, subset = )
+```
+
+##### iii. Using the built model, predict latitude and longitude for individuals belonging to the validation set n. 1. Store the predicted coordinates into predictCoord
+
+##### iiii. Repeat for all other validation sets. Calculate the prediction error.
+
 ### 6 : Conclusion
