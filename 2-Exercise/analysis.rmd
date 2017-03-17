@@ -146,7 +146,8 @@ Cross-validation is a technique used to minimize the bias introduced by split-va
 * Calculate the average performance of the models to obtain a performance estimate that is less sensitive to the partitioning of the data than split-validation.
 
 ```{r, echo = TRUE}
-set = sample(rep(1:10, each = nrow(genetic_data)/10))
+set_count = 10
+set = sample(rep(1:set_count, each = nrow(genetic_data)/set_count))
 ```
 
 #### b)
@@ -157,19 +158,43 @@ predictedCoord = matrix(nrow=nrow(NAm2), ncol=2, dimnames=list(c(), c("long", "l
 ```
 
 ##### ii. Using as predictors the scores of the first 4 PCA axes, explain latitude and longitude using the individuals who do not belong to validation set n. 1.
+##### iii. Using the built model, predict latitude and longitude for individuals belonging to the validation set n. 1. Store the predicted coordinates into predictCoord
+##### iiii. Repeat for all other validation sets. Calculate the prediction error.
+
 ```{r}
-naxes = 4
+predict_longlat = function(naxes, set_count) {
+	predictedCoord = matrix(nrow=nrow(NAm2), ncol=2, dimnames=list(c(), c("long", "lat")))
+	set = sample(rep(1:set_count, each = nrow(genetic_data)/set_count))
 
-pcalong = data.frame(cbind(long=NAm2[,c("long")],pcaNAm2$x))
-pcalat = data.frame(cbind(lat=NAm2[,c("lat")],pcaNAm2$x))
+	pcalong = data.frame(cbind(long=NAm2[,c("long")],pcaNAm2$x))
+	pcalat = data.frame(cbind(lat=NAm2[,c("lat")],pcaNAm2$x))
 
-# lmlong2 = lm(formula = long ~ ., data = pcalong, subset = )
-# lmlat2 = lm(formula = lat ~ ., data = pcalat, subset = )
+	for (i in 1:set_count) {
+		pcalong_naxes = pcalong[,1:(naxes+1)]
+		pcalat_naxes = pcalat[,1:(naxes+1)]
+
+		train = which(set != i)
+		lmlong2 = lm(formula = long ~ ., data = pcalong_naxes, subset = train)
+		lmlat2 = lm(formula = lat ~ ., data = pcalat_naxes, subset = train)
+
+		predictedCoord[-train,"long"] = predict(lmlong2, pcalong_naxes[-train,])
+		predictedCoord[-train,"lat"] = predict(lmlat2, pcalat_naxes[-train,])
+	}
+
+	return (predictedCoord)
+}
 ```
 
-##### iii. Using the built model, predict latitude and longitude for individuals belonging to the validation set n. 1. Store the predicted coordinates into predictCoord
+#### c) Repeat all steps of b), changing naxes from 2 to 440. Plot the prediction errors and the error obtained on the training set versus the number of components.
 
-##### iiii. Repeat for all other validation sets. Calculate the prediction error.
+
+```{r}
+# for (naxes in 2:440) {
+#     predictedCoord = predict_longlat(naxes, 10)
+# }
+```
+
+
 
 
 
