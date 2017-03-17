@@ -119,6 +119,18 @@ map("world",add=T)
 ```
 
 #### b)
+```{r, echo=FALSE, message=FALSE}
+library(fields)
+```
+
+Mean error on the previous model using the orthodromic distance :
+```{r, echo=FALSE}
+longlat_found = data.frame(long=lmlong$fitted.values, lat=lmlat$fitted.values)
+longlat_exp = NAm2[, c("long", "lat")]
+print(mean(rdist.earth.vec(longlat_found, longlat_exp, miles=F)))
+```
+This error is expressed in kilometers (to compare it, America is about 13 000 km long from north to south).
+
 
 ### 5 : PCR and Cross-Validation
 ### 6 : Conclusion
