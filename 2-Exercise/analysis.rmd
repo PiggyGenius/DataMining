@@ -44,7 +44,7 @@ There is more variables than data : we solve a linear system in which there is m
 **A) Explain quickly the principle of PCA.**
 
 PCA is an algorithm that projects a space into another space, that can be of a lesser dimension, while maximizing the explained variance, the algorithm considers that the data is linearly seperable and if it isn't it is possible to use kernel PCA.
-The algorithm can be used on the feature space and the data space and we can resume it algorithm as:
+The algorithm can be used on the feature space and the data space and we can resume it as:
 
 * Standardize the D-dimensional dataset (PCA is highly sensible to scale differences).
 
@@ -61,25 +61,41 @@ The algorithm can be used on the feature space and the data space and we can res
 **B) Perform PCA on genetic data with all samples, do we need to use the argument scale of prcomp ?**
 
 We don't need to use the scale argument since our data is already on the same scale (binary values). Scaling the data would even deterior the prediction since we would loose information.
-TODO: Say more about why scaling woud be worst.
+We can confirm that by comparing our PCA with feature scaling and PCA without feature scaling, in the case of PCA without scaling our first two components capture 37.7% of the variance. For PCA with scaling, our first two components only capture around 0.3% of the variance.
+
+```{r, echo=FALSE}
+genetic_data = NAm2[,-c(1:8)]
+pcaNAm2 = prcomp(genetic_data, center = FALSE, scale = FALSE)
+```
 
 **C) Describe and interpret the obtained graphs, what populations are easily identified using the first two axes. Answer to the same question using the 5th and 6th axes.**
 
-BON
-
+We see that most populations are easily identified using the first and second components. A few populations are not really seperable since they fall on the same region (Wayuu, Huilliche, Arhuaco).
+With the 5th and 6th axes, only two populations are easily identified: Karitiana and Ache.
 ```{r, echo=FALSE}
-pcaNAm2 = prcomp(NAm2[,-c(1:8)], center = TRUE, scale = FALSE)
 pca_plot <- function(caxes){
-	plot(pcaNAm2$x[,caxes],col="white")
+	plot(pcaNAm2$x[,caxes],col="white", ylim=c(min(pcaNAm2$x[, caxes[2]]), max(pcaNAm2$x[, caxes[2]]) + 20))
 	for (i in 1:npop) {
 		# print(names[i])
 		lines(pcaNAm2$x[which(NAm2[,3]==names[i]),caxes],type="p",col=colPalette[i],pch=pch[i])
 	}
-	legend("top",legend = names,col = colPalette,lty = -1,pch = pch,cex = .75,ncol = 3,lwd = 2)
+	legend("top", legend = names,col = colPalette, lty = -1,pch = pch,cex = .75,ncol = 3,lwd = 2)
 }
 pca_plot(c(1,2))
 pca_plot(c(5,6))
 ```
+
+**D) What percentage of variance is captured by the first two principle components ? How many principle components would you keep if you would like to represent genetic markers using a minimal number of components ?**
+
+The first and second component capture around 37,7% of the variance. The number of components depends on how much of the variance we are willing to loose, if we consider that 80% percent of the variance is enough, we would keep the 210 first components.
+
+```{r, echo = TRUE}
+variance_proportion = pcaNAm2$sdev^2
+variance_proportion = variance_proportion / sum(variance_proportion)
+print(cumsum(variance_proportion[1:2])[2])
+print(cumsum(variance_proportion[1:210])[210])
+```
+
 
 ### 4 : PCR
 #### a) Predict the latitude and longitude using the scores of the 250 PCA axes. Let denote the results of these regressions by *lmlat* and *lmlong*.
@@ -117,7 +133,24 @@ This error is expressed in kilometers (to compare it, America is about 13 000 km
 
 ### 5 : PCR and Cross-Validation
 
+#### a) Recall the principle of cross-validation method. Explain why this method is interesting to build a predictive model. Create a vector set that contains for each individual the index of the subset he/she belongs to.
+
+Cross-validation is a technique used to minimize the bias introduced by split-validation that only uses one subset of the data to test the model (depending on which subset we might have very different performance estimates). Cross-validation can be resumed as follows:
+
+* Randomly split the data into K-folds without replacement.
+
+* K-1 folds are used for model training and one fold is used for testing.
+
+* Repeat the preceding operation K times with a different testing fold so that we obtain K models and performance estimates.
+
+* Calculate the average performance of the models to obtain a performance estimate that is less sensitive to the partitioning of the data than split-validation.
+
+```{r, echo = TRUE}
+set = sample(rep(1:10, each = nrow(genetic_data)/10))
+```
+
 #### b)
+
 ##### i. Create an empty matrix predictedCoord with 2 columns ("longitude", "latitude") and as many rows as there are individuals.
 ```{r}
 predictedCoord = matrix(nrow=nrow(NAm2), ncol=2, dimnames=list(c(), c("long", "lat")))
@@ -137,5 +170,7 @@ pcalat = data.frame(cbind(lat=NAm2[,c("lat")],pcaNAm2$x))
 ##### iii. Using the built model, predict latitude and longitude for individuals belonging to the validation set n. 1. Store the predicted coordinates into predictCoord
 
 ##### iiii. Repeat for all other validation sets. Calculate the prediction error.
+
+
 
 ### 6 : Conclusion
