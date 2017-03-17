@@ -61,7 +61,7 @@ The algorithm can be used on the feature space and the data space and we can res
 **B) Perform PCA on genetic data with all samples, do we need to use the argument scale of prcomp ?**
 
 We don't need to use the scale argument since our data is already on the same scale (binary values). Scaling the data would even deterior the prediction since we would loose information.
-We can confirm that by comparing our PCA with feature scaling and PCA without feature scaling, in the case of PCA without scaling our first two components capture 94.3% of the variance. For PCA with scaling, our first two components only capture around 0.3% of the variance.
+We can confirm that by comparing our PCA with feature scaling and PCA without feature scaling, in the case of PCA without scaling our first two components capture 37.7% of the variance. For PCA with scaling, our first two components only capture around 0.3% of the variance.
 
 ```{r, echo=FALSE}
 genetic_data = NAm2[,-c(1:8)]
@@ -133,4 +133,21 @@ This error is expressed in kilometers (to compare it, America is about 13 000 km
 
 
 ### 5 : PCR and Cross-Validation
+
+**A) Recall the principle of cross-validation method. Explain why this method is interesting to build a predictive model. Create a vector set that contains for each individual the index of the subset he/she belongs to.**
+
+Cross-validation is a technique used to minimize the bias introduced by split-validation that only uses one subset of the data to test the model (depending on which subset we might have very different performance estimates). Cross-validation can be resumed as follows:
+
+* Randomly split the data into K-folds without replacement.
+
+* K-1 folds are used for model training and one fold is used for testing.
+
+* Repeat the preceding operation K times with a different testing fold so that we obtain K models and performance estimates.
+
+* Calculate the average performance of the models to obtain a performance estimate that is less sensitive to the partitioning of the data than split-validation.
+
+```{r, echo = TRUE}
+set = sample(rep(1:10, each = nrow(genetic_data)/10))
+```
+
 ### 6 : Conclusion
