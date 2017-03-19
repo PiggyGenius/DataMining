@@ -117,7 +117,7 @@ legend("topright",legend=names,col=colPalette,
 map("world",add=T)
 ```
 
-#### b)
+#### b) Calculate the mean error of the previous model built using 250 axes.
 ```{r, echo=FALSE, message=FALSE}
 library(fields)
 ```
@@ -130,10 +130,9 @@ print(mean(rdist.earth.vec(longlat_found, longlat_exp, miles=F)))
 ```
 This error is expressed in kilometers (to compare it, America is about 13 000 km long from north to south).
 
-
 ### 5 : PCR and Cross-Validation
 
-**A) Recall the principle of cross-validation method. Explain why this method is interesting to build a predictive model. Create a vector set that contains for each individual the index of the subset he/she belongs to.**
+#### a) Recall the principle of cross-validation method. Explain why this method is interesting to build a predictive model. Create a vector set that contains for each individual the index of the subset he/she belongs to.
 
 Cross-validation is a technique used to minimize the bias introduced by split-validation that only uses one subset of the data to test the model (depending on which subset we might have very different performance estimates). Cross-validation can be resumed as follows:
 
@@ -146,7 +145,60 @@ Cross-validation is a technique used to minimize the bias introduced by split-va
 * Calculate the average performance of the models to obtain a performance estimate that is less sensitive to the partitioning of the data than split-validation.
 
 ```{r, echo = TRUE}
-set = sample(rep(1:10, each = nrow(genetic_data)/10))
+set_count = 10
+set = sample(rep(1:set_count, each = nrow(genetic_data)/set_count))
 ```
+
+#### b)
+
+##### i. Create an empty matrix predictedCoord with 2 columns ("longitude", "latitude") and as many rows as there are individuals.
+```{r}
+predictedCoord = matrix(nrow=nrow(NAm2), ncol=2, dimnames=list(c(), c("long", "lat")))
+```
+
+##### ii. Using as predictors the scores of the first 4 PCA axes, explain latitude and longitude using the individuals who do not belong to validation set n. 1.
+##### iii. Using the built model, predict latitude and longitude for individuals belonging to the validation set n. 1. Store the predicted coordinates into predictCoord
+##### iiii. Repeat for all other validation sets. Calculate the prediction error.
+
+```{r}
+pcalong = data.frame(cbind(long=NAm2[,c("long")],pcaNAm2$x))
+pcalat = data.frame(cbind(lat=NAm2[,c("lat")],pcaNAm2$x))
+
+predict_longlat = function(naxes) {
+	# naxes : number of PCA axes to use
+	# returns the mean of the predicted error
+
+	predictedCoord = matrix(nrow=nrow(NAm2), ncol=2, dimnames=list(c(), c("long", "lat")))
+	set = sample(rep(1:set_count, each = nrow(genetic_data)/set_count))
+
+	pcalong_naxes = pcalong[,1:(naxes+1)]
+	pcalat_naxes = pcalat[,1:(naxes+1)]
+
+	for (i in 1:set_count) {
+
+		train = which(set != i)
+		lmlong2 = lm(formula = long ~ ., data = pcalong_naxes, subset = train)
+		lmlat2 = lm(formula = lat ~ ., data = pcalat_naxes, subset = train)
+
+		predictedCoord[-train,"long"] = predict(lmlong2, pcalong_naxes[-train,])
+		predictedCoord[-train,"lat"] = predict(lmlat2, pcalat_naxes[-train,])
+	}
+
+	return (mean(rdist.earth.vec(predictedCoord, longlat_exp, miles=F)))
+}
+```
+
+#### c) Repeat all steps of b), changing naxes from 2 to 440. Plot the prediction errors and the error obtained on the training set versus the number of components.
+
+
+```{r}
+# pcamin = 2
+# pcamax = 440
+# plot(pcamin:pcamax, lapply(pcamin:pcamax, predict_longlat))
+```
+
+
+
+
 
 ### 6 : Conclusion
