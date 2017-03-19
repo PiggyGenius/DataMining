@@ -70,8 +70,7 @@ pcaNAm2 = prcomp(genetic_data, center = FALSE, scale = FALSE)
 
 **C) Describe and interpret the obtained graphs, what populations are easily identified using the first two axes. Answer to the same question using the 5th and 6th axes.**
 
-We see that most populations are easily identified using the first and second components. A few populations are not really seperable since they fall on the same region (Wayuu, Huilliche, Arhuaco).
-With the 5th and 6th axes, only two populations are easily identified: Karitiana and Ache.
+TODO.
 ```{r, echo=FALSE}
 pca_plot <- function(caxes){
 	plot(pcaNAm2$x[,caxes],col="white", ylim=c(min(pcaNAm2$x[, caxes[2]]), max(pcaNAm2$x[, caxes[2]]) + 20))
@@ -106,7 +105,7 @@ pca250 = pcaNAm2$x[,1:250]
 lmlong = lm(formula = long ~ ., data = cbind(pca250, NAm2["long"]))
 lmlat = lm(formula = lat ~ ., data = cbind(pca250, NAm2["lat"]))
 
-plot(lmlong$fitted.values,lmlat$fitted.values, col="white", asp=1)
+plot(lmlong$fitted.values,lmlat$fitted.values, col="white", asp=1, ylim=c(min(lmlat$fitted.values), max(lmlat$fitted.values) + 120))
 for (i in 1:npop) {
 	# print(names[i])
 	lines(lmlong$fitted.values[which(NAm2[,3]==names[i])],
