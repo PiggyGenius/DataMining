@@ -220,6 +220,7 @@ predict_longlat = function(naxes) {
 	return(predictedCoord)
 }
 ```
+
 ```{r, echo=FALSE}
 
 compute_mean_error = function(naxes) {
@@ -233,7 +234,7 @@ cat("Prediction error using 4 PCs : ", compute_mean_error(4))
 
 ```{r, echo=FALSE}
 pcamin = 2
-pcamax = 440
+pcamax = 10
 mean_errors = lapply(pcamin:pcamax, compute_mean_error)
 plot(pcamin:pcamax, mean_errors)
 ```
@@ -260,6 +261,11 @@ legend("bottomleft",legend=names,col=colPalette,
 	   lty=-1,pch=pch,cex=.75,ncol=3,lwd=2)
 map("world",add=T)
 ```
+
+# ```{r}
+# predictedCoord_best_pca = cbind(predictedCoord_best_pca, Pop=as.data.frame(NAm2[,"Pop"]))
+# aggregate(long+lat ~ Pop, predictedCoord_best_pca, mean)
+# ```
 
 ### 6 : Conclusion
 
