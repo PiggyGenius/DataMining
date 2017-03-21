@@ -51,7 +51,7 @@ We see that there are a lot of NA values, and we have a warning "Coefficients: (
 PCA is an algorithm that projects a space into another space, that can be of a lesser dimension, while maximizing the explained variance, the algorithm considers that the data is linearly separable and if it isn't, it is possible to use kernel PCA.
 The algorithm can be used on the feature space and the data space, we can resume it as:
 
-* Standardize the D-dimensional dataset (PCA is highly sensible to scale differences).
+* Standardize the D-dimensional dataset if features don't share a common unit (PCA is highly sensible to scale differences).
 
 * Construct the covariance matrix.
 
@@ -236,7 +236,7 @@ cat("Prediction error using 4 PCs : ", compute_mean_error(4))
 pcamin = 2
 pcamax = 10
 mean_errors = lapply(pcamin:pcamax, compute_mean_error)
-plot(pcamin:pcamax, mean_errors)
+plot(pcamin:pcamax, mean_errors, xlab="Number of Principal Components", ylab="Mean prediction error in km")
 ```
 
 #### d) Which model would you keep? What is the prediction error for this model? Compare it with the training error. (cf 4.c) Plot the predicted coordinates on a map (cf. 4.b).
@@ -269,4 +269,41 @@ map("world",add=T)
 
 ### 6 : Conclusion
 
+#### Propose a conclusion to the study. You could write some paragraph about the quality of predictors, versus the number of factors, possible improvements to the approach , ... We expect some thorough presentation of the final model and interpretation, not exclusively R code lines.
 
+The conducted study's goal was to obtain results on the impact of PCA for dimensionality reduction on prediction of American tribes using linear regression. We can summarize our study as follows:
+
+* We previously used PCA for data visualization / analysis by saving only 2 PCs.
+
+* After plotting our data transformation with the first two PCs, we noticed that this 2-D space wasn't sufficient for linear seperation of our classes.
+
+* The conclusion of this analysis was to save more components so that our new dataset still holds at least 80 percent of the explained variance.
+
+* We then computed the prediction error for 2 to 440 PC using cross-validation and chose the best number of Principal Components: 73.
+
+* Finally, we used this model to predict all the dataset (result of cross-validation) and plot the results. We see that our results mostly fall around the initial coordinates, a lot of those predictions are on water.
+
+
+Our final pipeline to predict the geographical coordinates of populations based on their genetical mutations is obtained by the following procedure:
+
+* Don't standardize the data, all our features are already on the same scale and standardizing the data will deterior the prediction ability of our model.
+
+* Apply PCA to construct a projection matrix from the top (in terms of eigenvalues) 73 eigenvectors.
+
+* Train the model using linear regression.
+
+* Use the model to predict geographical coordinates of new samples.
+
+Our model's efficiency can be characterized using the following metrics:
+
+* Mean prediction accuracy in km: 1080.728.
+
+* ...
+
+Finally, there are mutliple ways our model could be improved:
+
+* We could force the model to predict coordinated that are on land (by adding a penalty on predictions that land on water), it might force the algorithm to give better predictions.
+
+* Since our populations only have one value to characterize their location, we could see this learning problem as a classification problem and use a different machine learning algorithm to get better results.
+
+* Following the same idea as the first point, if we had a circle of possibiliy instead of a center point, the linear regression would give better results since it wouldn't predict our those centers.
