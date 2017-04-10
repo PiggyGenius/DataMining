@@ -234,7 +234,7 @@ cat("Prediction error using 4 PCs : ", compute_mean_error(4))
 
 ```{r, echo=FALSE}
 pcamin = 2
-pcamax = 10
+pcamax = 440
 mean_errors = lapply(pcamin:pcamax, compute_mean_error)
 plot(pcamin:pcamax, mean_errors, xlab="Number of Principal Components", ylab="Mean prediction error in km")
 ```
@@ -261,11 +261,6 @@ legend("bottomleft",legend=names,col=colPalette,
 	   lty=-1,pch=pch,cex=.75,ncol=3,lwd=2)
 map("world",add=T)
 ```
-
-# ```{r}
-# predictedCoord_best_pca = cbind(predictedCoord_best_pca, Pop=as.data.frame(NAm2[,"Pop"]))
-# aggregate(long+lat ~ Pop, predictedCoord_best_pca, mean)
-# ```
 
 ### 6 : Conclusion
 
@@ -297,8 +292,6 @@ Our final pipeline to predict the geographical coordinates of populations based 
 Our model's efficiency can be characterized using the following metrics:
 
 * Mean prediction accuracy in km: 1080.728.
-
-* ...
 
 Finally, there are mutliple ways our model could be improved:
 
