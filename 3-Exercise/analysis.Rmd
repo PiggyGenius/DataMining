@@ -5,8 +5,34 @@
 
 #### 1. What is the dimension of the problem (the size of the vocabulary)? What is the number of documents per class (their distribution)?
 ```{r, echo=FALSE}
-all_data = readLines("BaseReuters-29")
+library(Matrix)
+all_data = readLines("BaseReuters-29", n=100)
+rows = length(all_data)
+vocab_size = 1000000 # 141144 ?
+
+# TODO : justify structure
+# STRUCTURE = sparse matrix + list of classes
+words = sparseMatrix(c(1), c(1), x=c(1), dims=c(rows, vocab_size))
+classes = vector(,rows)
+
+i = 1
+max = 0
+for (line in all_data) {
+	split = strsplit(line, " ")[[1]]
+	classes[i] = as.numeric(split[1])
+	for (word in split[-1]) {
+		val = as.numeric(strsplit(word, ":")[[1]])
+		if (val[1] > max) {
+			max = val[1]
+		}
+		words[i, val[1]] = val[2]
+	}
+	i = i+1
+}
+
+print(max)
 ```
+
 
 #### 2. Split randomly the collection into a training set (52500 documents) and a test set (18203 documents).
 
