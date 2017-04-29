@@ -7,11 +7,12 @@ import pandas as pd
 
 classes = []
 rows = 0
-vocab_size = 1000000
+vocab_size = 141144
 
 with open("BaseReuters-29", "r") as f:
     content = f.readlines()
     rows = len(content)
+
     docs = sp.lil_matrix((rows, vocab_size))
 
     i = 0
@@ -26,5 +27,5 @@ with open("BaseReuters-29", "r") as f:
         i += 1
 
 
-print(classes)
+#  print(classes)
 
