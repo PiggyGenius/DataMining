@@ -12,22 +12,28 @@ def load_classes():
     vocab_size = 141145
     i = 0
     #  max_size = 0
-    for line in content:
-        words = line.split(' ')
-        words.pop() # remove '\n' at the end
-        classes.append(int(words.pop(0)))
-        for word in words:
-            val = word.split(':')
-            #  if (int(val[0]) > max_size):
-            #      max_size = int(val[0])
-            docs[i, int(val[0])] = int(val[1])
-        i += 1
-return (rows, vocab_size, classes, docs)
+
+    with open("BaseReuters-29", "r") as f:
+        content = f.readlines()
+        rows = len(content)
+
+        docs = sp.lil_matrix((rows, vocab_size))
+        for line in content:
+            words = line.split(' ')
+            words.pop() # remove '\n' at the end
+            classes.append(int(words.pop(0)))
+            for word in words:
+                val = word.split(':')
+                #  if (int(val[0]) > max_size):
+                #      max_size = int(val[0])
+                docs[i, int(val[0])] = int(val[1])
+            i += 1
+    return (rows, vocab_size, classes, docs)
 
 if __name__=="__main__":
     # Do it only once, the result is stored in classes.npy
     # Then, load it (faster than parsing again)
-    #  np.save("classes.npy", load_classes())
+    np.save("classes.npy", load_classes())
     rows, vocab_size, classes, docs = np.load("classes.npy")
 
 
