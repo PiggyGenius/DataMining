@@ -220,6 +220,7 @@ predict_longlat = function(naxes) {
 	return(predictedCoord)
 }
 ```
+
 ```{r, echo=FALSE}
 
 compute_mean_error = function(naxes) {
@@ -288,7 +289,11 @@ Our final pipeline to predict the geographical coordinates of populations based 
 
 * Use the model to predict geographical coordinates of new samples.
 
-Our model's mean prediction accuracy in km is: 1080.728. Finally, there are mutliple ways our model could be improved:
+Our model's efficiency can be characterized using the following metrics:
+
+* Mean prediction accuracy in km: 1080.728.
+
+Finally, there are mutliple ways our model could be improved:
 
 * We could force the model to predict coordinated that are on land (by adding a penalty on predictions that land on water), it might force the algorithm to give better predictions.
 
