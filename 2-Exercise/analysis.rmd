@@ -3,11 +3,17 @@
 
 ### 1 : Data 
 
-Number of unnamed columns : 
+#### Check up that columns have explicit names.
 ```{r, echo=FALSE}
 NAm2 = read.table("NAm2.txt", header=TRUE)
-print(sum(is.na(colnames(NAm2, do.NULL=TRUE))))
+cat("Number of unnamed columns = ", sum(is.na(colnames(NAm2, do.NULL=TRUE))), "\n")
 ```
+
+```{r, echo=FALSE, message=FALSE}
+library(maps)
+```
+
+#### Describe what this script does and how it works.
 
 ```{r}
 # get the list of the tribe names
@@ -20,33 +26,32 @@ coord = unique(NAm2[,c("Pop","long","lat")]) #coordinates for each pop
 colPalette = rep(c("black","red","cyan","orange","brown","blue","pink","purple","darkgreen"),3)
 # set the icons for the plot
 pch = rep(c(16,15,25),each = 9)
-plot(coord[,c("long","lat")],pch = pch,col = colPalette,asp = 1)
+plot(coord[,c("long","lat")],pch = pch,col = colPalette,asp = 1, ylab="Latitude", xlab="Longitude")
 # asp allows to have the correct ratio between axis longitude and latitude
 # Then the map is not deformed
 legend("bottomleft",legend = names,col = colPalette,lty = -1,pch = pch,cex = .75,ncol = 2,lwd = 2)
-library(maps)
 # add the map of the world
 map("world",add = T)
 ```
 
 ### 2 : Regression
-```{r, echo=FALSE}
+```{r}
 NAaux = NAm2[,-c(1:7)]
 NAauxLM = lm(formula = long ~ ., data = NAaux)
 ```
 **Using all genetic markers as predictors, predict the longitude using a linear regression model. What happens ?**
 
-There is more variables than data : we solve a linear system in which there is more unknown variables than equations. So there is an infinite number of solutions, that is why we have NA values.
+We see that there are a lot of NA values, and we have a warning "Coefficients: (5216 not defined because of singularities)". There are more variables than data : we solve a linear system in which there are more unknown variables than equations. Thus, there is an infinite number of solutions, that is why we have NA values.
 
 
 ### 3 : PCA
 
 **A) Explain quickly the principle of PCA.**
 
-PCA is an algorithm that projects a space into another space, that can be of a lesser dimension, while maximizing the explained variance, the algorithm considers that the data is linearly seperable and if it isn't it is possible to use kernel PCA.
-The algorithm can be used on the feature space and the data space and we can resume it as:
+PCA is an algorithm that projects a space into another space, that can be of a lesser dimension, while maximizing the explained variance, the algorithm considers that the data is linearly separable and if it isn't, it is possible to use kernel PCA.
+The algorithm can be used on the feature space and the data space, we can resume it as:
 
-* Standardize the D-dimensional dataset (PCA is highly sensible to scale differences).
+* Standardize the D-dimensional dataset if features don't share a common unit (PCA is highly sensible to scale differences).
 
 * Construct the covariance matrix.
 
@@ -56,21 +61,21 @@ The algorithm can be used on the feature space and the data space and we can res
 
 * Construct a projection matrix from the top K eigenvectors.
 
-* Transform the D-Dimensional dataset using the projection matrix to obtain the new K-dimensional space.
+* Transform the D-Dimensional dataset using the projection matrix to obtain the new K-dimensional space. The resulting features are linear combinations of the initial variables.
 
 **B) Perform PCA on genetic data with all samples, do we need to use the argument scale of prcomp ?**
 
-We don't need to use the scale argument since our data is already on the same scale (binary values). Scaling the data would even deterior the prediction since we would loose information.
-We can confirm that by comparing our PCA with feature scaling and PCA without feature scaling, in the case of PCA without scaling our first two components capture 37.7% of the variance. For PCA with scaling, our first two components only capture around 0.3% of the variance.
+We don't need to use the scale argument since our data is already on the same scale (binary values). Scaling the data would even deterior the prediction since we would loose information : scaling binary variables would actually add a meaningless scale to the features instead of removing it.
 
-```{r, echo=FALSE}
+We can confirm that by comparing our PCA with feature scaling and PCA without feature scaling, in the case of PCA without scaling our first two components capture 37.7% of the variance. For PCA with scaling, our first two components only capture around 3% of the variance.
+
+```{r}
 genetic_data = NAm2[,-c(1:8)]
 pcaNAm2 = prcomp(genetic_data, center = FALSE, scale = FALSE)
 ```
 
 **C) Describe and interpret the obtained graphs, what populations are easily identified using the first two axes. Answer to the same question using the 5th and 6th axes.**
 
-TODO.
 ```{r, echo=FALSE}
 pca_plot <- function(caxes){
 	plot(pcaNAm2$x[,caxes],col="white", ylim=c(min(pcaNAm2$x[, caxes[2]]), max(pcaNAm2$x[, caxes[2]]) + 20))
@@ -84,49 +89,59 @@ pca_plot(c(1,2))
 pca_plot(c(5,6))
 ```
 
+With the 1st and 2nd axes, we see that only the Ache population is identifiable and linearly separable from the others. With the 5th and 6th axes, only two populations are easily identified: Karitiana and Ache.
+The other populations are indistinguishable : it shows that 2 PCs aren't enough to separate the populations, and that we'll need to keep more PCs to have enough information to be able to do predictions.
+
+
 **D) What percentage of variance is captured by the first two principle components ? How many principle components would you keep if you would like to represent genetic markers using a minimal number of components ?**
 
-The first and second component capture around 37,7% of the variance. The number of components depends on how much of the variance we are willing to loose, if we consider that 80% percent of the variance is enough, we would keep the 210 first components.
+The first and second components capture around 37,7% of the variance. The number of components depends on how much of the variance we are willing to loose, if we consider that 80% percent of the variance is enough, we would keep the 210 first components.
 
-```{r, echo = TRUE}
+```{r, echo=FALSE}
 variance_proportion = pcaNAm2$sdev^2
 variance_proportion = variance_proportion / sum(variance_proportion)
-print(cumsum(variance_proportion[1:2])[2])
-print(cumsum(variance_proportion[1:210])[210])
+cat("Cumulative sum of explained variance using PC1 and PC2 = ", cumsum(variance_proportion[1:2])[2], "\n")
+cat("Cumulative sum of explained variance using the first 210 PCs = ", cumsum(variance_proportion[1:210])[210], "\n")
 ```
 
+We can plot the percentage of the explained variance in function of the number of PCs we keep :
+```{r, echo = FALSE}
+plot((1:494), cumsum(variance_proportion), xlab="Number of PCs", ylab="Percentage of explained variance")
+```
 
 ### 4 : PCR
 #### a) Predict the latitude and longitude using the scores of the 250 PCA axes. Let denote the results of these regressions by *lmlat* and *lmlong*.
 
-```{r, echo=FALSE}
+```{r, fig.height=10, fig.width=11, echo = FALSE}
 pca250 = pcaNAm2$x[,1:250]
 
 lmlong = lm(formula = long ~ ., data = cbind(pca250, NAm2["long"]))
 lmlat = lm(formula = lat ~ ., data = cbind(pca250, NAm2["lat"]))
 
-plot(lmlong$fitted.values,lmlat$fitted.values, col="white", asp=1, ylim=c(min(lmlat$fitted.values), max(lmlat$fitted.values) + 120))
+plot(lmlong$fitted.values,lmlat$fitted.values, col="white", asp=1, xlab="Longitude", ylab="Latitude")
 for (i in 1:npop) {
-	# print(names[i])
 	lines(lmlong$fitted.values[which(NAm2[,3]==names[i])],
 		  lmlat$fitted.values[which(NAm2[,3]==names[i])],
 		  type="p",col=colPalette[i],pch=pch[i])
 }
-legend("topright",legend=names,col=colPalette,
-	   lty=-1,pch=pch,cex=.75,ncol=2,lwd=2)
+legend("bottomleft",legend=names,col=colPalette,
+	   lty=-1,pch=pch,cex=.75,ncol=3,lwd=2)
 map("world",add=T)
 ```
+
+#### Compare with the map of question 1. Does this map illustrate too optimistically or too pessimistically the ability to find geographical origin of individuals outside the database from its genetic markers?
+We see that the predicted values are close to the location of their population on the first map (for example, Huilliches are in south of Chili, close to their location on the previous map).
+On the other hand, we used the same dataset for training and testing, therefore, the prediction is too optimistic and is sensible to overfitting.
 
 #### b) Calculate the mean error of the previous model built using 250 axes.
 ```{r, echo=FALSE, message=FALSE}
 library(fields)
 ```
 
-Mean error on the previous model using the orthodromic distance :
 ```{r, echo=FALSE}
 longlat_found = data.frame(long=lmlong$fitted.values, lat=lmlat$fitted.values)
 longlat_exp = NAm2[, c("long", "lat")]
-print(mean(rdist.earth.vec(longlat_found, longlat_exp, miles=F)))
+cat("Mean error on the previous model using the orthodromic distance = ", mean(rdist.earth.vec(longlat_found, longlat_exp, miles=F)), "\n")
 ```
 This error is expressed in kilometers (to compare it, America is about 13 000 km long from north to south).
 
@@ -136,7 +151,7 @@ This error is expressed in kilometers (to compare it, America is about 13 000 km
 
 Cross-validation is a technique used to minimize the bias introduced by split-validation that only uses one subset of the data to test the model (depending on which subset we might have very different performance estimates). Cross-validation can be resumed as follows:
 
-* Randomly split the data into K-folds without replacement.
+* Randomly split the data into K folds without replacement.
 
 * K-1 folds are used for model training and one fold is used for testing.
 
@@ -157,48 +172,126 @@ predictedCoord = matrix(nrow=nrow(NAm2), ncol=2, dimnames=list(c(), c("long", "l
 ```
 
 ##### ii. Using as predictors the scores of the first 4 PCA axes, explain latitude and longitude using the individuals who do not belong to validation set n. 1.
-##### iii. Using the built model, predict latitude and longitude for individuals belonging to the validation set n. 1. Store the predicted coordinates into predictCoord
-##### iiii. Repeat for all other validation sets. Calculate the prediction error.
-
 ```{r}
+train = which(set != 1)
+
+# add long to pcalong, and lat to pcalat
 pcalong = data.frame(cbind(long=NAm2[,c("long")],pcaNAm2$x))
 pcalat = data.frame(cbind(lat=NAm2[,c("lat")],pcaNAm2$x))
 
+# apply linear regression with the first 4 PCs
+lmlong2 = lm(formula = long ~ ., data = pcalong[,1:5], subset = train)
+lmlat2 = lm(formula = lat ~ ., data = pcalat[,1:5], subset = train)
+```
+
+##### iii. Using the built model, predict latitude and longitude for individuals belonging to the validation set n. 1. Store the predicted coordinates into predictCoord
+```{r}
+predictedCoord[-train,"long"] = predict(lmlong2, pcalong[-train,1:5])
+predictedCoord[-train,"lat"] = predict(lmlat2, pcalat[-train,1:5])
+```
+
+##### iiii. Repeat for all other validation sets. Calculate the prediction error.
+```{r}
 predict_longlat = function(naxes) {
 	# naxes : number of PCA axes to use
-	# returns the mean of the predicted error
+	# returns the prediction matrix
 
+	# create an empty matrix
 	predictedCoord = matrix(nrow=nrow(NAm2), ncol=2, dimnames=list(c(), c("long", "lat")))
+	# split in set_count folds for cross-validation
 	set = sample(rep(1:set_count, each = nrow(genetic_data)/set_count))
 
+	# keep only naxes PCs
 	pcalong_naxes = pcalong[,1:(naxes+1)]
 	pcalat_naxes = pcalat[,1:(naxes+1)]
 
+	# each subset is the validation set alternatively
 	for (i in 1:set_count) {
-
 		train = which(set != i)
 		lmlong2 = lm(formula = long ~ ., data = pcalong_naxes, subset = train)
 		lmlat2 = lm(formula = lat ~ ., data = pcalat_naxes, subset = train)
 
+		# fill the prediction matrix for the validation set
 		predictedCoord[-train,"long"] = predict(lmlong2, pcalong_naxes[-train,])
 		predictedCoord[-train,"lat"] = predict(lmlat2, pcalat_naxes[-train,])
 	}
 
-	return (mean(rdist.earth.vec(predictedCoord, longlat_exp, miles=F)))
+	# return the prediction matrix
+	return(predictedCoord)
 }
+```
+```{r, echo=FALSE}
+
+compute_mean_error = function(naxes) {
+	return (mean(rdist.earth.vec(predict_longlat(naxes), longlat_exp, miles=F)))
+}
+
+cat("Prediction error using 4 PCs : ", compute_mean_error(4))
 ```
 
 #### c) Repeat all steps of b), changing naxes from 2 to 440. Plot the prediction errors and the error obtained on the training set versus the number of components.
 
-
-```{r}
-# pcamin = 2
-# pcamax = 440
-# plot(pcamin:pcamax, lapply(pcamin:pcamax, predict_longlat))
+```{r, echo=FALSE}
+pcamin = 2
+pcamax = 440
+mean_errors = lapply(pcamin:pcamax, compute_mean_error)
+plot(pcamin:pcamax, mean_errors, xlab="Number of Principal Components", ylab="Mean prediction error in km")
 ```
 
+#### d) Which model would you keep? What is the prediction error for this model? Compare it with the training error. (cf 4.c) Plot the predicted coordinates on a map (cf. 4.b).
+```{r, echo=FALSE}
+best_pca = which.min(mean_errors) + pcamin - 1
+cat("The minimum mean error is", mean_errors[[best_pca - pcamin + 1]], ", reached with", best_pca, "PCs.")
+```
+This model is therefore the one we keep. We see that this error is far bigger than the training error, because that error was obtained by using the same dataset for training and testing, which caused overfitting.
 
+```{r, fig.height=10, fig.width=11, echo = FALSE}
+predictedCoord_best_pca = predict_longlat(best_pca)
 
-
+predictedLong = predictedCoord_best_pca[,"long"]
+predictedLat = predictedCoord_best_pca[,"lat"]
+plot(predictedLong, predictedLat, col="white", asp=1, xlab="Longitude", ylab="Latitude")
+for (i in 1:npop) {
+	lines(predictedLong[which(NAm2[,3]==names[i])],
+		  predictedLat[which(NAm2[,3]==names[i])],
+		  type="p",col=colPalette[i],pch=pch[i])
+}
+legend("bottomleft",legend=names,col=colPalette,
+	   lty=-1,pch=pch,cex=.75,ncol=3,lwd=2)
+map("world",add=T)
+```
 
 ### 6 : Conclusion
+
+#### Propose a conclusion to the study. You could write some paragraph about the quality of predictors, versus the number of factors, possible improvements to the approach , ... We expect some thorough presentation of the final model and interpretation, not exclusively R code lines.
+
+The conducted study's goal was to obtain results on the impact of PCA for dimensionality reduction on prediction of American tribes using linear regression. We can summarize our study as follows:
+
+* We previously used PCA for data visualization / analysis by saving only 2 PCs.
+
+* After plotting our data transformation with the first two PCs, we noticed that this 2-D space wasn't sufficient for linear seperation of our classes.
+
+* The conclusion of this analysis was to save more components so that our new dataset still holds at least 80 percent of the explained variance.
+
+* We then computed the prediction error for 2 to 440 PC using cross-validation and chose the best number of Principal Components: 73.
+
+* Finally, we used this model to predict all the dataset (result of cross-validation) and plot the results. We see that our results mostly fall around the initial coordinates, a lot of those predictions are on water.
+
+
+Our final pipeline to predict the geographical coordinates of populations based on their genetical mutations is obtained by the following procedure:
+
+* Don't standardize the data, all our features are already on the same scale and standardizing the data will deterior the prediction ability of our model.
+
+* Apply PCA to construct a projection matrix from the top (in terms of eigenvalues) 73 eigenvectors.
+
+* Train the model using linear regression.
+
+* Use the model to predict geographical coordinates of new samples.
+
+Our model's mean prediction accuracy in km is: 1080.728. Finally, there are mutliple ways our model could be improved:
+
+* We could force the model to predict coordinated that are on land (by adding a penalty on predictions that land on water), it might force the algorithm to give better predictions.
+
+* Since our populations only have one value to characterize their location, we could see this learning problem as a classification problem and use a different machine learning algorithm to get better results.
+
+* Following the same idea as the first point, if we had a circle of possibiliy instead of a center point, the linear regression would give better results since it wouldn't predict out of those centers.
