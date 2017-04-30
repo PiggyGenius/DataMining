@@ -46,13 +46,15 @@ if __name__=="__main__":
     test_size = 18203
     train_values, test_values, train_classes, test_classes = train_test_split(docs, classes, train_size = train_size, test_size = test_size, random_state = 1)
 
-    class_term_frequency = [[[1, 0] for i in range(vocab_size)] for j in range(class_count)]
-    class_doc_frequency = [2 for i in range(class_count)]
+    class_term_frequency = [[[0, 0] for i in range(vocab_size)] for j in range(class_count)]
+    class_doc_frequency = [0 for i in range(class_count)]
 
+    # We store the number of documents in each class containing each term in [0]
+    # We store the sum of term frequency for all documents in each class in [1]
     cx = train_values.tocoo()
     for i, j, v in zip(cx.row, cx.col, cx.data):
-        class_term_frequency[classes[i]][j][0] += 1
-        class_term_frequency[classes[i]][j][1] += cx.data
+        class_term_frequency[classes[i] - 1][j][0] += 1
+        class_term_frequency[classes[i] - 1][j][1] += v
 
     print("Size :", (rows, vocab_size))
     print("Number of documents per class :")
