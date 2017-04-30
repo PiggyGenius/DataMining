@@ -8,6 +8,8 @@ The parsing in R wasn't very hard and was as simple as it is in Python but we ha
 We used the sparseMatrix data structure from the Matrix package, but it ended to be very slow at filling that matrix (about 1 second per line, which is far too long for our 70 000 lines dataset). We concluded that this data structure was no appropriate for our problem and decided to switch to Python.
 
 ## Data structure
-In our code in Python, we use a lil_matrix from the sciPy package : it's a sparse matrix that can be filled iteratively. The reading function needs about 1 minute, but we can then store the results of it in a file (by uncommenting the line "np.save(...)"). We can then read that file (with the line np.load(...)), that is much faster than parsing the source file again.
+In our code in Python, we use a lil_matrix from the sciPy package : it's a sparse matrix that can be filled iteratively. The reading function needs about 1 minute, but we can then store the results of it in a file (by uncommenting the line "np.save(...)"). We can then read that file (with the line np.load(...)), that is much faster than parsing the source file again. With the same idea, we also run some parsing scripts at the beginning in order to find the size of the vocabulary, which is now hard coded in the code : it saved us some time at the parsing of the file, because we can create elements at the right size without any pre-parsing.
 
 ## Answers
+Here is the output of our script : 
+
