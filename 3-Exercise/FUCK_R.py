@@ -66,10 +66,11 @@ if __name__=="__main__":
 
 
 
-    # BERNOULLI ###############################################
+    ##### TRAINING #####
 
     # theta_m[k][i] contains the theta of the term t_i in the class k
     theta_m = [[0 for i in range(vocab_size)] for j in range(class_count)]
+    theta_b = [[0 for i in range(vocab_size)] for j in range(class_count)]
 
     for k in range(len(class_term_frequency)):
         # count the total number of words
@@ -78,36 +79,19 @@ if __name__=="__main__":
             total += elt[1]
 
         # compute the frequency of term i divided by the total, for this class k
-        no_word_value = 1 / (class_doc_frequency[k] + 2)
+        no_word_value_m = 1 / (total + vocab_size)
+        no_word_value_b = 1 / (class_doc_frequency[k] + 2)
         for i in range(len(class_term_frequency[k])):
             val = class_term_frequency[k][i][1]
             if val == 0:
-                theta_m[k][i] = no_word_value
-            else:
-                theta_m[k][i] = (class_term_frequency[k][i][0] + 1) / (class_doc_frequency[k] + 2)
-
-
-    # MULTINOMIAL #############################################
-
-    # theta_m[k][i] contains the theta of the term t_i in the class k
-    theta_m = [[0 for i in range(vocab_size)] for j in range(class_count)]
-
-    for k in range(len(class_term_frequency)):
-        # count the total number of words
-        total = 0
-        for elt in class_term_frequency[k]:
-            total += elt[1]
-
-        # compute the frequency of term i divided by the total, for this class k
-        no_word_value = 1 / (total + vocab_size)
-        for i in range(len(class_term_frequency[k])):
-            val = class_term_frequency[k][i][1]
-            if val == 0:
-                theta_m[k][i] = no_word_value
+                theta_m[k][i] = no_word_value_m
+                theta_b[k][i] = no_word_value_b
             else:
                 theta_m[k][i] = (class_term_frequency[k][i][1] + 1) / (total + vocab_size)
-
+                theta_b[k][i] = (class_term_frequency[k][i][0] + 1) / (class_doc_frequency[k] + 2)
 
     # computation of the pi_k
     pi_k = [c / train_size for c in class_doc_frequency]
 
+
+    ##### TRAINING #####
