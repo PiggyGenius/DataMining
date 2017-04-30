@@ -56,9 +56,12 @@ if __name__=="__main__":
 
     print("Size :", (rows, vocab_size))
     print("Number of documents per class :")
-    for elt in [[x, classes.count(x)] for x in set(classes)]:
+    for elt in [[x, classes.count(x)] for x in range(1, class_count+1)]:
         print("Class", elt[0], ":", elt[1], "documents")
-        class_doc_frequency[elt[0]-1] += elt[1]
+
+    # computation of the class_doc_frequency (on the training set)
+    class_doc_frequency = [train_classes.count(x) for x in range(1, class_count+1)]
+
 
 
     # BERNOULLI ###############################################
@@ -91,4 +94,11 @@ if __name__=="__main__":
                 theta_m[k][i] = no_word_value
             else:
                 theta_m[k][i] = (class_term_frequency[k][i][1] + 1) / (total + vocab_size)
+
+
+    # computation of the pi_k
+    pi_k = [c / train_size for c in class_doc_frequency]
+    print(pi_k)
+    print(sum(pi_k))
+    print(sum(class_doc_frequency))
 
