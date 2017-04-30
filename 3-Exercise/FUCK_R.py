@@ -92,6 +92,24 @@ if __name__=="__main__":
 
     # computation of the pi_k
     pi_k = [c / train_size for c in class_doc_frequency]
+    prediction = [0 for x in range(test_size)]
+    pif = [0 for x in range(class_count)]
 
 
-    ##### TRAINING #####
+    ##### TESTING #####
+    for i in range(test_size):
+        max_pif = [0, 0]
+        for k in range(class_count):
+            pif[k] = math.log1p(pi_k[k])
+            for j in range(vocab_size):
+                if test_values[i, j] != 0.0:
+                    pif[k] += math.log1p(theta_b[k][j])
+                else:
+                    pif[k] += math.log1p(1 - theta_b[k][j])
+            if max_pif[0] < pif[k]:
+                max_pif[0] = pif[k]
+                max_pif[1] = k
+        prediction[i] = max_pif[1]
+        break
+
+    print(prediction[0], test_classes[0])
