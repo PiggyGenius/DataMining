@@ -49,10 +49,12 @@ if __name__=="__main__":
     class_term_frequency = [[[0, 0] for i in range(vocab_size)] for j in range(class_count)]
     class_doc_frequency = [0 for i in range(class_count)]
 
+    # We store the number of documents in each class containing each term in [0]
+    # We store the sum of term frequency for all documents in each class in [1]
     cx = train_values.tocoo()
     for i, j, v in zip(cx.row, cx.col, cx.data):
-        class_term_frequency[classes[i]-1][j][0] += 1
-        class_term_frequency[classes[i]-1][j][1] += v
+        class_term_frequency[classes[i] - 1][j][0] += 1
+        class_term_frequency[classes[i] - 1][j][1] += v
 
     print("Size :", (rows, vocab_size))
     print("Number of documents per class :")
@@ -66,13 +68,23 @@ if __name__=="__main__":
 
     # BERNOULLI ###############################################
 
-    # We predict the testing set
-    # cx = test_values.tocoo()
-    # for i,j,v in zip(cx.row, cx.col, cx.data):
-        # print(i,j,v)
-        # max_value = 0
-        # for k in range(len(classes)):
-            # max_value = math.log1p(class_doc_frequency / train_size)
+    # theta_m[k][i] contains the theta of the term t_i in the class k
+    theta_m = [[0 for i in range(vocab_size)] for j in range(class_count)]
+
+    for k in range(len(class_term_frequency)):
+        # count the total number of words
+        total = 0
+        for elt in class_term_frequency[k]:
+            total += elt[1]
+
+        # compute the frequency of term i divided by the total, for this class k
+        no_word_value = 1 / (class_doc_frequency[k] + 2)
+        for i in range(len(class_term_frequency[k])):
+            val = class_term_frequency[k][i][1]
+            if val == 0:
+                theta_m[k][i] = no_word_value
+            else:
+                theta_m[k][i] = (class_term_frequency[k][i][0] + 1) / (class_doc_frequency[k] + 2)
 
 
     # MULTINOMIAL #############################################
@@ -98,7 +110,4 @@ if __name__=="__main__":
 
     # computation of the pi_k
     pi_k = [c / train_size for c in class_doc_frequency]
-    print(pi_k)
-    print(sum(pi_k))
-    print(sum(class_doc_frequency))
 
