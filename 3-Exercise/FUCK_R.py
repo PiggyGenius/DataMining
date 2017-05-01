@@ -108,8 +108,6 @@ if __name__=="__main__":
                     pif[k] += math.log1p(1 - theta_b[k][j])
             if max_pif[0] < pif[k]:
                 max_pif[0] = pif[k]
-                max_pif[1] = k
+                max_pif[1] = k + 1
         prediction[i] = max_pif[1]
         break
-
-    print(prediction[0], test_classes[0])
