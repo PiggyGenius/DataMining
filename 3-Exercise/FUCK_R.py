@@ -13,7 +13,7 @@ def load_classes():
     classes = []
     class_count = 29
     rows = 0
-    vocab_size = 141145
+    vocab_size = 141144
     i = 0
     #  max_size = 0
 
@@ -31,7 +31,7 @@ def load_classes():
                 val = word.split(':')
                 #  if (int(val[0]) > max_size):
                 #      max_size = int(val[0])
-                docs[i, int(val[0])] = int(val[1])
+                docs[i, int(val[0])-1] = int(val[1])
             i += 1
     return (rows, vocab_size, classes, class_count, docs)
 
@@ -39,6 +39,7 @@ if __name__=="__main__":
     # Do it only once, the result is stored in classes.npy
     # Then, load it (faster than parsing again)
     #  np.save("classes.npy", load_classes())
+    #  exit()
     rows, vocab_size, classes, class_count, docs = np.load("classes.npy")
 
     # We randomly split the dataset using sklearn.train_test_split
@@ -123,11 +124,11 @@ if __name__=="__main__":
         for i in range(test_size):
             print(i)
             max_pif = [0, 0]
-            pif = 0
+            pif = 0.0
             for k in range(class_count):
                 pif = math.log1p(pi_k[k])
                 for j in test_values.getrow(i).tocoo().col:
-                    pif += math.log1p(theta_m[k][j-1])
+                    pif += math.log1p(theta_m[k][i])
 
                 if max_pif[0] < pif:
                     max_pif[0] = pif
