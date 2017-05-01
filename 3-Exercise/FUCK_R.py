@@ -1,12 +1,12 @@
 #! /usr/bin/env python3
 #-*- coding:utf-8 -*-
-import itertools
 import random
 import scipy.sparse as sp
 import pandas as pd
 import numpy as np
 import math
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
 
 def load_classes():
@@ -97,19 +97,43 @@ if __name__=="__main__":
 
 
     ##### TESTING #####
-    for i in range(test_size):
-        max_pif = [0, 0]
-        for k in range(class_count):
-            pif[k] = math.log1p(pi_k[k])
-            for j in range(vocab_size):
-                if test_values[i, j] != 0.0:
-                    pif[k] += math.log1p(theta_b[k][j])
-                else:
-                    pif[k] += math.log1p(1 - theta_b[k][j])
-            if max_pif[0] < pif[k]:
-                max_pif[0] = pif[k]
-                max_pif[1] = k
-        prediction[i] = max_pif[1]
-        break
 
-    print(prediction[0], test_classes[0])
+    #  algo = "BERNOULLI"
+    algo = "MULTINOMIAL"
+
+    if algo == "BERNOULLI":
+
+        for i in range(test_size):
+            max_pif = [0, 0]
+            for k in range(class_count):
+                pif[k] = math.log1p(pi_k[k])
+                for j in range(vocab_size):
+                    if test_values[i, j] != 0.0:
+                        pif[k] += math.log1p(theta_b[k][j])
+                    else:
+                        pif[k] += math.log1p(1 - theta_b[k][j])
+                if max_pif[0] < pif[k]:
+                    max_pif[0] = pif[k]
+                    max_pif[1] = k + 1
+            prediction[i] = max_pif[1]
+            break
+
+    elif algo == "MULTINOMIAL":
+
+        for i in range(test_size):
+            print(i)
+            max_pif = [0, 0]
+            pif = 0
+            for k in range(class_count):
+                pif = math.log1p(pi_k[k])
+                for j in test_values.getrow(i).tocoo().col:
+                    pif += math.log1p(theta_m[k][j-1])
+
+                if max_pif[0] < pif:
+                    max_pif[0] = pif
+                    max_pif[1] = k + 1
+            prediction[i] = max_pif[1]
+
+
+
+    print("Correctly classified samples : %.2f" % accuracy_score(prediction, test_classes))
