@@ -49,18 +49,33 @@ def train_multinomial(values, classes):
     for k, doc in zip(classes, values):
         for i in doc:
             tf[k][i] += doc[i]
-            D[k] += tf[k][i]
+            D[k] += doc[i]
 
     for k in range(class_count):
         for i in range(vocab_size):
-            PC[k][i] = (tf[k][i] + 1)/(D[k] + vocab_size)
+            PC[k][i] = (tf[k][i] + 1.0)/(D[k] + vocab_size)
 
     return Pi, PC
 
 
-def test_multinomial():
-    return
-
+def test_multinomial(Pi, PC, values):
+    prediction = []
+    c = 1
+    for doc in values:
+        print(c, end="\r")
+        k_max = 0.0
+        PiF_max = -999999999
+        for k in range(class_count):
+            PiF = np.log(Pi[k])
+            for i in doc:
+                PiF += doc[i] * np.log(PC[k][i])
+                #  PiF += doc[i] * np.log(PC[i, k])
+            if PiF > PiF_max:
+                k_max = k
+                PiF_max = PiF
+        prediction.append(k_max)
+        c += 1
+    return prediction
 
 
 if __name__=="__main__":
@@ -96,6 +111,9 @@ if __name__=="__main__":
 
     print("Training multinomial model")
     Pi, PC = train_multinomial(train_values, train_classes)
+    print("Testing multinomial model")
+    prediction = test_multinomial(Pi, PC, test_values)
+    print("Correctly classified samples : %.2f" % accuracy_score(prediction, test_classes))
     exit()
 
 
@@ -152,23 +170,3 @@ if __name__=="__main__":
             prediction[i] = max_pif[1]
             break
 
-    elif algo == "MULTINOMIAL":
-
-        for i in range(test_size):
-            print(i)
-            max_pif = [0, 0]
-            pif = 0.0
-            for k in range(class_count):
-                pif = math.log1p(pi_k[k])
-                m = test_values.getrow(i).tocoo()
-                for j, v in zip(m.col, m.data):
-                    pif += v * math.log1p(theta_m[k][i])
-
-                if max_pif[0] < pif:
-                    max_pif[0] = pif
-                    max_pif[1] = k + 1
-            prediction[i] = max_pif[1]
-
-
-
-    print("Correctly classified samples : %.2f" % accuracy_score(prediction, test_classes))
