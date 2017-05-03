@@ -13,7 +13,7 @@ def load_classes():
     classes = []
     class_count = 29
     rows = 0
-    vocab_size = 141145
+    vocab_size = 141144
     i = 0
     #  max_size = 0
 
@@ -39,6 +39,7 @@ if __name__=="__main__":
     # Do it only once, the result is stored in classes.npy
     # Then, load it (faster than parsing again)
     # np.save("classes.npy", load_classes())
+    # exit()
     rows, vocab_size, classes, class_count, docs = np.load("classes.npy")
 
     # We randomly split the dataset using sklearn.train_test_split
@@ -69,7 +70,7 @@ if __name__=="__main__":
     ##### TRAINING #####
 
     # theta_m[k][i] contains the theta of the term t_i in the class k
-    theta_m = [[0 for i in range(vocab_size)] for j in range(class_count)]
+    theta_m = np.array([[0 for i in range(vocab_size)] for j in range(class_count)])
     theta_b = [[0 for i in range(vocab_size)] for j in range(class_count)]
 
     for k in range(len(class_term_frequency)):
@@ -107,15 +108,16 @@ if __name__=="__main__":
             max_pif = [0, 0]
             pif = 0
             for k in range(class_count):
-                pif = math.log1p(pi_k[k])
+                # pif = math.log1p(pi_k[k])
                 for j in range(vocab_size):
-                    if test_values[i, j] != 0.0:
-                        pif += math.log1p(theta_b[k][j])
-                    else:
-                        pif += math.log1p(1 - theta_b[k][j])
-                if max_pif[0] < pif:
-                    max_pif[0] = pif
-                    max_pif[1] = k + 1
+                    pif = 0
+                    # if test_values[i, j] != 0.0:
+                        # pif += math.log1p(theta_b[k][j])
+                    # else:
+                        # pif += math.log1p(1 - theta_b[k][j])
+                # if max_pif[0] < pif:
+                    # max_pif[0] = pif
+                    # max_pif[1] = k + 1
             print(i)
             prediction[i] = max_pif[1]
 
@@ -124,11 +126,11 @@ if __name__=="__main__":
         for i in range(test_size):
             print(i)
             max_pif = [0, 0]
-            pif = 0
+            pif = 0.0
             for k in range(class_count):
                 pif = math.log1p(pi_k[k])
                 for j in test_values.getrow(i).tocoo().col:
-                    pif += math.log1p(theta_m[k][j-1])
+                    pif += math.log1p(theta_m[k][i])
 
                 if max_pif[0] < pif:
                     max_pif[0] = pif
