@@ -8,43 +8,34 @@ import math
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
+vocab_size = 141144
+class_count = 29
+rows = 70703
 
-def load_classes():
+def read_data():
     classes = []
-    class_count = 29
-    rows = 0
-    vocab_size = 141144
-    i = 0
-    #  max_size = 0
-
-    print("Reading file")
+    docs = []
 
     with open("BaseReuters-29", "r") as f:
         content = f.readlines()
-        rows = len(content)
-
-        docs = sp.lil_matrix((rows, vocab_size))
         for line in content:
+            dico = {}
             words = line.split(' ')
             words.pop() # remove '\n' at the end
-            class_index = (int(words.pop(0)))
-            classes.append(class_index)
+            classes.append(int(words.pop(0)))
             for word in words:
                 val = word.split(':')
-                #  if (int(val[0]) > max_size):
-                #      max_size = int(val[0])
-                docs[i, int(val[0])-1] = int(val[1])
-            i += 1
-    return (rows, vocab_size, classes, class_count, docs)
+                dico[int(val[0])] = int(val[1])
+            docs.append(dico)
+    return classes, docs
+
 
 if __name__=="__main__":
-    # Do it only once, the result is stored in classes.npy
-    # Then, load it (faster than parsing again)
-    #  np.save("classes.npy", load_classes())
-    #  exit()
-    rows, vocab_size, classes, class_count, docs = np.load("classes.npy")
+    print("Readind data")
+    classes, docs = read_data()
 
     # We randomly split the dataset using sklearn.train_test_split
+    print("Splitting dataset")
     train_size = 52500
     test_size = 18203
     train_values, test_values, train_classes, test_classes = train_test_split(docs, classes, train_size = train_size, test_size = test_size, random_state = 1)
