@@ -8,43 +8,34 @@ import math
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
+vocab_size = 141144
+class_count = 29
+rows = 70703
 
-def load_classes():
+def read_data():
     classes = []
-    class_count = 29
-    rows = 0
-    vocab_size = 141144
-    i = 0
-    #  max_size = 0
-
-    print("Reading file")
+    docs = []
 
     with open("BaseReuters-29", "r") as f:
         content = f.readlines()
-        rows = len(content)
-
-        docs = sp.lil_matrix((rows, vocab_size))
         for line in content:
+            dico = {}
             words = line.split(' ')
             words.pop() # remove '\n' at the end
-            class_index = (int(words.pop(0)))
-            classes.append(class_index)
+            classes.append(int(words.pop(0)))
             for word in words:
                 val = word.split(':')
-                #  if (int(val[0]) > max_size):
-                #      max_size = int(val[0])
-                docs[i, int(val[0]) - 1] = int(val[1])
-            i += 1
-    return (rows, vocab_size, classes, class_count, docs)
+                dico[int(val[0])] = int(val[1])
+            docs.append(dico)
+    return classes, docs
+
 
 if __name__=="__main__":
-    # Do it only once, the result is stored in classes.npy
-    # Then, load it (faster than parsing again)
-    # np.save("classes.npy", load_classes())
-    # exit()
-    rows, vocab_size, classes, class_count, docs = np.load("classes.npy")
+    print("Readind data")
+    classes, docs = read_data()
 
     # We randomly split the dataset using sklearn.train_test_split
+    print("Splitting dataset")
     train_size = 52500
     test_size = 18203
     train_values, test_values, train_classes, test_classes = train_test_split(docs, classes, train_size = train_size, test_size = test_size, random_state = 1)
@@ -72,7 +63,7 @@ if __name__=="__main__":
     ##### TRAINING #####
 
     # theta_m[k][i] contains the theta of the term t_i in the class k
-    theta_m = np.array([[0 for i in range(vocab_size)] for j in range(class_count)])
+    theta_m = [[0 for i in range(vocab_size)] for j in range(class_count)]
     theta_b = [[0 for i in range(vocab_size)] for j in range(class_count)]
 
     for k in range(len(class_term_frequency)):
@@ -101,27 +92,25 @@ if __name__=="__main__":
 
     ##### TESTING #####
 
-    algo = "BERNOULLI"
-    # algo = "MULTINOMIAL"
+    #  algo = "BERNOULLI"
+    algo = "MULTINOMIAL"
 
     if algo == "BERNOULLI":
 
         for i in range(test_size):
             max_pif = [0, 0]
-            pif = 0
             for k in range(class_count):
-                # pif = math.log1p(pi_k[k])
+                pif[k] = math.log1p(pi_k[k])
                 for j in range(vocab_size):
-                    pif = 0
-                    # if test_values[i, j] != 0.0:
-                        # pif += math.log1p(theta_b[k][j])
-                    # else:
-                        # pif += math.log1p(1 - theta_b[k][j])
-                # if max_pif[0] < pif:
-                    # max_pif[0] = pif
-                    # max_pif[1] = k + 1
-            print(i)
+                    if test_values[i, j] != 0.0:
+                        pif[k] += math.log1p(theta_b[k][j])
+                    else:
+                        pif[k] += math.log1p(1 - theta_b[k][j])
+                if max_pif[0] < pif[k]:
+                    max_pif[0] = pif[k]
+                    max_pif[1] = k + 1
             prediction[i] = max_pif[1]
+            break
 
     elif algo == "MULTINOMIAL":
 
