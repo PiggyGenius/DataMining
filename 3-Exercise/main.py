@@ -51,17 +51,32 @@ def train_multinomial(values, classes):
     for k, doc in zip(classes, values):
         for i in doc:
             tf[k][i] += doc[i]
-            D[k] += tf[k][i]
+            D[k] += doc[i]
 
     for k in range(class_count):
         for i in range(vocab_size):
-            PC[k][i] = (tf[k][i] + 1)/(D[k] + vocab_size)
+            PC[k][i] = (tf[k][i] + 1.0)/(D[k] + vocab_size)
 
     return Pi, PC
 
-
-def test_multinomial():
-    return
+def test_multinomial(Pi, PC, values):
+    prediction = []
+    c = 1
+    for doc in values:
+        print(c, end="\r")
+        k_max = 0.0
+        PiF_max = -999999999
+        for k in range(class_count):
+            PiF = np.log(Pi[k])
+            for i in doc:
+                PiF += doc[i] * np.log(PC[k][i])
+                #  PiF += doc[i] * np.log(PC[i, k])
+            if PiF > PiF_max:
+                k_max = k
+                PiF_max = PiF
+        prediction.append(k_max)
+        c += 1
+    return prediction
 
 def bernoulli_model(train_classes, train_values, test_classes, test_values, vocab_size, train_size):
     # TRAINING
@@ -90,6 +105,7 @@ def bernoulli_model(train_classes, train_values, test_classes, test_values, voca
     print("Correctly classified samples : %.2f" % accuracy_score(prediction, test_classes))
 
 
+
 if __name__=="__main__":
     print("Reading data")
     classes, docs = read_data()
@@ -98,4 +114,18 @@ if __name__=="__main__":
     print("Splitting dataset")
     train_values, test_values, train_classes, test_classes = train_test_split(docs, classes, train_size = train_size, test_size = test_size, random_state = 1)
 
-    bernoulli_model(train_classes, train_values, test_classes, test_values, vocab_size, train_size)
+    print("Size :", (rows, vocab_size))
+    print("Number of documents per class :")
+    
+    i = 1
+    for elt in count_documents(classes):
+        print("Class", i, ":", elt, "documents")
+        i += 1
+
+    print("Training multinomial model")
+    Pi, PC = train_multinomial(train_values, train_classes)
+    print("Testing multinomial model")
+    prediction = test_multinomial(Pi, PC, test_values)
+    print("Correctly classified samples : %.2f" % accuracy_score(prediction, test_classes))
+    
+    # bernoulli_model(train_classes, train_values, test_classes, test_values, vocab_size, train_size)
