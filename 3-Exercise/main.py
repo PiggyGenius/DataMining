@@ -15,7 +15,7 @@ train_size = 52500
 test_size = 18203
 
 algo = "multinomial"
-#  algo = "bernoulli"
+#  algo = "bernoulli" # very slow
 
 def read_data():
 	classes = []
@@ -81,12 +81,13 @@ def test_multinomial(Pi, PC, values):
 				PiF_max = PiF
 		prediction.append(k_max)
 		c += 1
+	print()
 	return prediction
 
 
 # Bernoulli model ####################################################################################
 
-def bernoulli_model(train_classes, train_values, test_classes, test_values, vocab_size, train_size):
+def bernoulli_model(train_classes, train_values, test_classes, test_values):
 	# TRAINING
 	_, N = np.unique(train_classes, return_counts = True)
 	pi = N / train_size
@@ -99,6 +100,7 @@ def bernoulli_model(train_classes, train_values, test_classes, test_values, voca
 	# TESTING
 	prediction = np.zeros(test_size)
 	for i, document in zip(range(test_size), test_values):
+		print(i, end='\r')
 		pc_t = np.copy(pc)
 		missing_token = np.array([token not in document for token in range(vocab_size)])
 		pc_t[missing_token] *= -1
@@ -107,8 +109,8 @@ def bernoulli_model(train_classes, train_values, test_classes, test_values, voca
 		pif = np.sum(pc_t, axis = 0)
 		pif += np.log(pi)
 		prediction[i] = np.argmax(pif)
-
-	print("Correctly classified samples : %.2f" % accuracy_score(prediction, test_classes))
+	print()
+	return accuracy_score(prediction, test_classes)
 
 
 def train_bernoulli(values, classes):
@@ -120,14 +122,6 @@ def test_bernoulli(Pi, PC, values):
 
 
 if __name__=="__main__":
-
-	if algo == "multinomial":
-		train_function = train_multinomial
-		test_function = test_multinomial
-	elif algo == "bernoulli":
-		train_function = train_bernoulli
-		test_function = test_bernoulli
-
 
 	print("Reading data")
 	classes, docs = read_data()
@@ -142,18 +136,25 @@ if __name__=="__main__":
 		i += 1
 
 
-	
 	iterations = 20
 	accuracies = 0.0
-	for i in range(iterations):
-		print("Splitting dataset")
-		train_values, test_values, train_classes, test_classes = train_test_split(docs, classes, train_size = train_size, test_size = test_size, random_state = 1)
 
-		print("Training " + algo + " model")
-		Pi, PC = train_function(train_values, train_classes)
-		print("Testing " + algo + " model")
-		prediction = test_function(Pi, PC, test_values)
+	if algo == "multinomial":
+		for i in range(iterations):
+			train_values, test_values, train_classes, test_classes = train_test_split(docs, classes, train_size = train_size, test_size = test_size)
 
-		accuracies += accuracy_score(prediction, test_classes)
+			Pi, PC = train_multinomial(train_values, train_classes)
+			prediction = test_multinomial(Pi, PC, test_values)
 
-	print("Correctly classified samples (average on " + iterations + " iterations):" + accuracies/iterations)
+			accuracies += accuracy_score(prediction, test_classes)
+
+		print("--- Multinomial model---\nCorrectly classified samples (average on " + iterations + " iterations):" + accuracies/iterations)
+
+	elif algo == "bernoulli":
+		for i in range(iterations):
+			train_values, test_values, train_classes, test_classes = train_test_split(docs, classes, train_size = train_size, test_size = test_size)
+			accuracies += bernoulli_model(train_classes, train_values, test_classes, test_values)
+		print("--- Bernoulli model---\nCorrectly classified samples (average on " + iterations + " iterations):" + accuracies/iterations)
+
+
+
