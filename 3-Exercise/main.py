@@ -148,13 +148,13 @@ if __name__=="__main__":
 
 			accuracies += accuracy_score(prediction, test_classes)
 
-		print("--- Multinomial model---\nCorrectly classified samples (average on " + iterations + " iterations):" + accuracies/iterations)
+		print("--- Multinomial model---\nCorrectly classified samples (average on",  iterations, "iterations):", accuracies/iterations)
 
 	elif algo == "bernoulli":
 		for i in range(iterations):
 			train_values, test_values, train_classes, test_classes = train_test_split(docs, classes, train_size = train_size, test_size = test_size)
 			accuracies += bernoulli_model(train_classes, train_values, test_classes, test_values)
-		print("--- Bernoulli model---\nCorrectly classified samples (average on " + iterations + " iterations):" + accuracies/iterations)
+		print("--- Bernoulli model---\nCorrectly classified samples (average on",  iterations, "iterations):", accuracies/iterations)
 
 
 

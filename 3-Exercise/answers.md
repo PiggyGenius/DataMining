@@ -12,9 +12,44 @@ In Python, we decided to use a lil_matrix from the sciPy package : it's a sparse
 
 We also ran some parsing scripts at the beginning in order to find the size of the vocabulary, which is now hard coded in the code : it simplifies our reading data function, as it doesn't have to return a long list of arguments.
 
-## Answers
-Here is the output of our script : 
+## Results
+
+Size : (70703, 141144)
+Class 1 : 5894 documents
+Class 2 : 1003 documents
+Class 3 : 2472 documents
+Class 4 : 2207 documents
+Class 5 : 6010 documents
+Class 6 : 2992 documents
+Class 7 : 1586 documents
+Class 8 : 1226 documents
+Class 9 : 2007 documents
+Class 10 : 3982 documents
+Class 11 : 7757 documents
+Class 12 : 3644 documents
+Class 13 : 3405 documents
+Class 14 : 2307 documents
+Class 15 : 1040 documents
+Class 16 : 1460 documents
+Class 17 : 1191 documents
+Class 18 : 1733 documents
+Class 19 : 4745 documents
+Class 20 : 1411 documents
+Class 21 : 1016 documents
+Class 22 : 3018 documents
+Class 23 : 1050 documents
+Class 24 : 1184 documents
+Class 25 : 1624 documents
+Class 26 : 1296 documents
+Class 27 : 1018 documents
+Class 28 : 1049 documents
+Class 29 : 1376 documents
 
 ### For Bernoulli model
+Correctly classified samples (average on 1 iterations): 0.55
+
+This code is slow so we didn't have time to run it 20 times.
+
 ### For multinomial model
+Correcty classified samples (average on 20 iterations): 0.77
 
